@@ -1,5 +1,5 @@
 # ADS-command-line
-A command line tool desigened for Astronomical Data System
+A command line tool desigened for [Astronomical Data System](http://www.adsabs.harvard.edu)
 
 ## System requirement
 Python2 (and packages including re and urlib2), [iTerm2](http://www.iterm2.com) (Best operating environment to enable terminal-based url request)
