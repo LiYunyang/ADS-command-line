@@ -1,8 +1,8 @@
 # ADS-command-line
-An interactive command line tool desigened for [Astronomical Data System](http://www.adsabs.harvard.edu)
+An interactive command line tool desigened for [Astronomical Data System](http://www.adsabs.harvard.edu) for macOS.
 
 ## System requirement
-Python2 (and packages including re and urlib2), [iTerm2](http://www.iterm2.com) (Best operating environment to enable terminal-based url request)
+Python2 (and packages including re, urlib2, multiprocessing and pyperclip), [iTerm2](http://www.iterm2.com) (Best operating environment to enable terminal-based url request)
 
 ## Search modes
 The software allows three modes of searching.
