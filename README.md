@@ -26,4 +26,6 @@ The results of the search is list in a citation-descending order.
 The link to the article is given in the F(ull), E(journal), X(arXiv) order unless neither of these term is availiable.
 
 Click the url lind to acess to the PDF version of the article.
-   
+
+## Ciation
+type the **num** to get the BibTex ciation, which is copied to the clipboard.
