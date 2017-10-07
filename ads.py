@@ -150,7 +150,6 @@ def scrap_a(fauthor, author_list, year):
             while True:
                 if inner_loop(False) == 1:
                     break
-    print
     print "\033[0;32;48m URL: \033[0m", url
     return 1
 
@@ -219,7 +218,16 @@ def scrap_j(journal, year, volume, page):
             authors, title, yyyy, mm = entries[idx-1]
             for i, a in enumerate(authors):
                 if '&#' in a:
-                    authors[i] = a.split(',')[0]
+                    temp = a.split(',')[0]
+                    if '&#' in temp:
+                        temp = ''
+                    authors[i] = temp
+            while True:
+                try:
+                    authors.remove('')
+                except ValueError:
+                    break
+            print authors
             fauthor = authors[0]
             authors = authors[1:]
             print 'getting citation...'
@@ -288,7 +296,6 @@ def scrap_j(journal, year, volume, page):
             while True:
                 if inner_loop(False) == 1:
                     break
-    print
     print "\033[0;32;48m URL: \033[0m", url
     return 1
 
@@ -366,6 +373,7 @@ def standby(order):
                 prmt = prmt.replace('et al', ' ')
 
                 prmt = prmt.replace('&', ' ')
+                prmt = prmt.replace(' and ', ' ')
                 prmt = prmt.replace(',', ' ')
                 p = re.compile('(.*?)\(?(\d{4})\)?', re.S)
                 authors, year = re.findall(p, prmt)[0]
@@ -384,7 +392,7 @@ def standby(order):
 
 
 if __name__ == '__main__':
-    print "\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 1.1.5. \033[0m"
+    print "\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 2.0. \033[0m"
     print "User experiment is optimized with iterm2"
     print "Latest update on Oct-05-2017"
     # print "\033[0;32;48m Designed and maintained by Yunyang Li \033[0m"
