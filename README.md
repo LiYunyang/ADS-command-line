@@ -8,7 +8,8 @@ Python2 (and packages including re, urlib2, multiprocessing and pyperclip), [iTe
 The software allows three modes of searching.
 1. Citation based (default)
 ![img](https://github.com/LiYunyang/ADS-command-line/blob/master/cmod.png)
-   type the citation, e.g., Li, at al., (2017); Li & Bregman 2017, etc.
+   type the citation, e.g., Li, et al., (2017); Li & Bregman 2017, etc.
+   arXiv ID based search is also supported in this mode.
 2. Author-year based
     ![img](https://github.com/LiYunyang/ADS-command-line/blob/master/amod.png)
    type a(uthor) to enter this search mode. 
