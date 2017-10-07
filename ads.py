@@ -6,7 +6,7 @@ from multiprocessing import Pool
 import pyperclip
 
 
-def get_content (url):
+def get_content(url):
     request = urllib2.Request(url)
     response = urllib2.urlopen(request)
     content = response.read()
@@ -14,7 +14,10 @@ def get_content (url):
 
 
 def scrap_a(fauthor, author_list, year):
-    faut = '%2C+'.join(fauthor.split(','))
+    print fauthor
+    print author_list
+    faut = '%2C'.join(fauthor.split(','))
+    faut = '+'.join(faut.split(' '))
     if faut != '':
         faut = '%5E' + faut
     for i, aut in enumerate(author_list):
@@ -22,7 +25,9 @@ def scrap_a(fauthor, author_list, year):
         if aut_splited[-1] == '':
             author_list[i] = '%0D%0A' + aut_splited[0]
         else:
-            author_list[i] = '%0D%0A'+'%2C+'.join(aut_splited)
+            temp = aut.replace(' ', '+')
+            temp = temp.replace(',', '%2C')
+            author_list[i] = '%0D%0A' + temp
     author = faut + ''.join(author_list)
     url = 'http://adsabs.harvard.edu/cgi-bin/nph-abs_connect?db_key=AST&db_key=PRE&qform=AST&arxiv_sel' \
           '=astro-ph&arxiv_sel=cond-mat&arxiv_sel=cs&arxiv_sel=gr-qc&arxiv_sel=hep-ex&arxiv_sel=hep-lat' \
@@ -97,6 +102,7 @@ def scrap_a(fauthor, author_list, year):
             elif order == 'exit'[:len(order)] or order == 'quit'[:len(order)] or order == '^[':
                 return 1
             else:
+                print '\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1]
                 return 0
 
     for idx, _ in enumerate(items):
@@ -131,11 +137,10 @@ def scrap_a(fauthor, author_list, year):
                 print "\033[0;32;48m E:\033[0m", E
             except:
                 try:
-                    pf = re.compile('href="([^"]*?type=PREPRINT)"', re.S)
+                    pf = re.compile('arXiv(\d\d\d\d)(\d*).*?type=PREPRINT', re.S)
                     ele = re.findall(pf, files)
-                    X = ele[0]
-                    X = X.replace('&#160;', ' ')
-                    X = X.replace('#38', 'amp')
+                    a, b = ele[0]
+                    X = "https://arxiv.org/pdf/%s.%s.pdf" % (a, b)
                     print "\033[0;31;48m X:\033[0m", X
                 except:
                     pass
@@ -152,7 +157,6 @@ def scrap_a(fauthor, author_list, year):
                     break
     print "\033[0;32;48m URL: \033[0m", url
     return 1
-
 
 def scrap_j(journal, year, volume, page):
 
@@ -243,6 +247,7 @@ def scrap_j(journal, year, volume, page):
             elif order == 'exit'[:len(order)] or order == 'quit'[:len(order)] or order == '^[':
                 return 1
             else:
+                print '\033[0;31;48m Unrecgonized command: %s \033[0m'%orderlist[-1]
                 return 0
     entries = list()
     for idx, _ in enumerate(items):
@@ -300,7 +305,83 @@ def scrap_j(journal, year, volume, page):
     return 1
 
 
+def scrap_arxiv(id):
+    url = "https://arxiv.org/abs/%s" % id
+    url_pdf = "https://arxiv.org/pdf/%s.pdf" % id
+    print "\033[0;31;48m X:\033[0m", url_pdf
+
+    def to_author_search():
+        content1 = get_content(url)
+        pattern1 = re.compile('Authors:</span>.*?</div>', re.S)
+        match = re.search(pattern1, content1)
+        content_range = match.group(0)
+
+        pattern_name = re.compile('">(.*?)</a>', re.S)
+        names = re.findall(pattern_name, content_range)
+        for i, n in enumerate(names):
+            n_split = n.split(' ')
+            if len(n_split) >= 3 and (n_split[-3] == 'Van' and n_split[-2] == 'der'):
+                last = ' '.join(n_split[-3:]) + ','
+                first = n_split[:-3]
+            elif len(n_split) >= 2 and (n_split[-2] == 'Le' or n_split[-2] == 'De' or n_split[-2] == 'Van'):
+                last = ' '.join(n_split[-2:]) + ','
+                first = n_split[:-2]
+            else:
+                last = n_split[-1]+','
+                first = n_split[:-1]
+
+            n_comb = last + ' '.join(first)
+            temp = n_comb
+            if '&#' in n_comb:
+                temp = n_comb.split(',')[0]
+                if '&#' in temp:
+                    temp = ''
+            names[i] = temp
+        while True:
+            try:
+                names.remove('')
+            except ValueError:
+                break
+
+        fauthor = names[0]
+        authors = names[1:8]
+        yy = int(id[:2])
+        year = [str(2000+yy)]*2
+        scrap_a(fauthor, authors, year)
+
+    def inner_loop():
+        order = raw_input(' continue? \033[0;32;48m >>> \033[0m')
+        orderlist.append(order)
+        if order == '':
+            return 0
+        elif order == 'ads'[:len(order)]:
+            to_author_search()
+            return 1
+        elif order == 'url'[:len(order)]:
+            print "\033[0;32;48m URL: \033[0m", url
+            return inner_loop()
+        elif order == 'exit'[:len(order)] or order == 'quit'[:len(order)] or order == '^[':
+            return 1
+        else:
+            print '\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1]
+            return 0
+
+    while True:
+        if inner_loop() == 1:
+            break
+    return 1
+
+
 def get_ainfo():
+    def format(s):
+        splited = s.split(' ')
+        while True:
+            try:
+                splited.remove('')
+            except ValueError:
+                break
+        return ' '.join(splited)
+
     try:
         print "\033[0;34;48m Search by author and year:\033[0m"
         a_list = list()
@@ -320,10 +401,9 @@ def get_ainfo():
                 year = get.split('-')
             except:
                 if get[0] == '^':
-                    fauthor = ''.join(get[1:].split(' '))
+                    fauthor = format(get[1:])
                 else:
-                    a_list.append(''.join(get.split(' ')))
-
+                    a_list.append(format(get))
         if len(year) == 1:
             year *= 2
         scrap_a(fauthor, a_list, year)
@@ -366,25 +446,42 @@ def standby(order):
                 get_jinfo()
             else:
                 prmt = str(order)
-                prmt = prmt.replace('etal', ' ')
-                prmt = prmt.replace('et al.,', ' ')
-                prmt = prmt.replace('et al.', ' ')
-                prmt = prmt.replace('et al,', ' ')
-                prmt = prmt.replace('et al', ' ')
+                splited = prmt.split('.')
+                try:
+                    a = splited[0].split(' ')
+                    b = splited[1].split(' ')
+                    while True:
+                        try:
+                            a.remove('')
+                        except ValueError:
+                            break
+                    while True:
+                        try:
+                            b.remove('')
+                        except ValueError:
+                            break
+                    scrap_arxiv('.'.join([a[0], b[0]]))
+                except:
+                    prmt = str(order)
+                    prmt = prmt.replace('etal', ' ')
+                    prmt = prmt.replace('et al.,', ' ')
+                    prmt = prmt.replace('et al.', ' ')
+                    prmt = prmt.replace('et al,', ' ')
+                    prmt = prmt.replace('et al', ' ')
 
-                prmt = prmt.replace('&', ' ')
-                prmt = prmt.replace(' and ', ' ')
-                prmt = prmt.replace(',', ' ')
-                p = re.compile('(.*?)\(?(\d{4})\)?', re.S)
-                authors, year = re.findall(p, prmt)[0]
-                authors = authors.split(' ')
-                while True:
-                    try:
-                        authors.remove('')
-                    except ValueError:
-                        break
-                year = [''.join(year)]
-                scrap_a(authors[0], authors[1:], year*2)
+                    prmt = prmt.replace('&', ' ')
+                    prmt = prmt.replace(' and ', ' ')
+                    prmt = prmt.replace(',', ' ')
+                    p = re.compile('(.*?)\(?(\d{4})\)?', re.S)
+                    authors, year = re.findall(p, prmt)[0]
+                    authors = authors.split(' ')
+                    while True:
+                        try:
+                            authors.remove('')
+                        except ValueError:
+                            break
+                    year = [''.join(year)]
+                    scrap_a(authors[0], authors[1:], year*2)
 
         except:
             print '\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1]
@@ -392,9 +489,9 @@ def standby(order):
 
 
 if __name__ == '__main__':
-    print "\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 2.0. \033[0m"
+    print "\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 2.1. \033[0m"
     print "User experiment is optimized with iterm2"
-    print "Latest update on Oct-05-2017"
+    print "Latest update on Oct-07-2017"
     # print "\033[0;32;48m Designed and maintained by Yunyang Li \033[0m"
     print "type a(uthor) for the (default) author-and-year based search (Last name, First name) or j(ournal) for a publication specified search"
     print "Alternatively, type the citation for a quick search: e.g., Li, et al., (2017)"
@@ -405,3 +502,5 @@ if __name__ == '__main__':
     else:
         orderlist.append(sys.argv[1])
         standby(sys.argv[1])
+
+
