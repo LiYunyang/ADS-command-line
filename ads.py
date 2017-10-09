@@ -14,8 +14,6 @@ def get_content(url):
 
 
 def scrap_a(fauthor, author_list, year):
-    print fauthor
-    print author_list
     faut = '%2C'.join(fauthor.split(','))
     faut = '+'.join(faut.split(' '))
     if faut != '':
