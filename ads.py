@@ -487,9 +487,9 @@ def standby(order):
 
 
 if __name__ == '__main__':
-    print "\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 2.1. \033[0m"
+    print "\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 2.2. \033[0m"
     print "User experience is optimized with iterm2"
-    print "Latest update on Oct-07-2017"
+    print "Latest update on Oct-10-2017"
     # print "\033[0;32;48m Designed and maintained by Yunyang Li \033[0m"
     print "type a(uthor) for the (default) author-and-year based search (Last name, First name) or j(ournal) for a publication specified search"
     print "Alternatively, type the citation for a quick search: e.g., Li, et al., (2017)"
