@@ -302,7 +302,6 @@ def scrap_j(journal, year, volume, page):
     print "\033[0;32;48m URL: \033[0m", url
     return 1
 
-
 def scrap_arxiv(id):
     url = "https://arxiv.org/abs/%s" % id
     url_pdf = "https://arxiv.org/pdf/%s.pdf" % id
@@ -444,23 +443,14 @@ def standby(order):
                 get_jinfo()
             else:
                 prmt = str(order)
-                splited = prmt.split('.')
                 try:
-                    a = splited[0].split(' ')
-                    b = splited[1].split(' ')
-                    while True:
-                        try:
-                            a.remove('')
-                        except ValueError:
-                            break
-                    while True:
-                        try:
-                            b.remove('')
-                        except ValueError:
-                            break
-                    scrap_arxiv('.'.join([a[0], b[0]]))
+                    splited = prmt.split('.')
+                    a = splited[0].replace(' ', '')
+                    b = splited[1].replace(' ', '')
+                    a = int(a)
+                    b = int(b)
+                    scrap_arxiv('%d.%d' % (a, b))
                 except:
-                    prmt = str(order)
                     prmt = prmt.replace('etal', ' ')
                     prmt = prmt.replace('et al.,', ' ')
                     prmt = prmt.replace('et al.', ' ')
@@ -470,6 +460,7 @@ def standby(order):
                     prmt = prmt.replace('&', ' ')
                     prmt = prmt.replace(' and ', ' ')
                     prmt = prmt.replace(',', ' ')
+
                     p = re.compile('(.*?)\(?(\d{4})\)?', re.S)
                     authors, year = re.findall(p, prmt)[0]
                     authors = authors.split(' ')
