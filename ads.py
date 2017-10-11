@@ -318,10 +318,10 @@ def scrap_arxiv(id):
         names = re.findall(pattern_name, content_range)
         for i, n in enumerate(names):
             n_split = n.split(' ')
-            if len(n_split) >= 3 and (n_split[-3] == 'Van' and n_split[-2] == 'der'):
+            if len(n_split) >= 3 and (n_split[-3] == 'Van' and n_split[-2] == 'der') or (n_split[-3] == 'Van' and n_split[-2] == 'den'):
                 last = ' '.join(n_split[-3:]) + ','
                 first = n_split[:-3]
-            elif len(n_split) >= 2 and (n_split[-2] == 'Le' or n_split[-2] == 'De' or n_split[-2] == 'Van'):
+            elif len(n_split) >= 2 and (n_split[-2] == 'Le' or n_split[-2] == 'De' or n_split[-2] == 'Van' or n_split[-2] == 'Von'):
                 last = ' '.join(n_split[-2:]) + ','
                 first = n_split[:-2]
             else:
