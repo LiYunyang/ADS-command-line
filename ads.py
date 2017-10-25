@@ -441,6 +441,8 @@ def standby(order):
                 get_ainfo()
             elif order == 'journal'[:len(order)] and len(order) > 0:
                 get_jinfo()
+            elif order == 'help'[:len(order)] and len(order) > 0:
+                help()
             else:
                 prmt = str(order)
                 try:
@@ -477,13 +479,20 @@ def standby(order):
         standby(raw_input("\033[0;32;48m >>> \033[0m"))
 
 
+def help():
+    print "Type the citation for a quick search (default): e.g., Li, et al., (2017)."
+    print "Type a(uthor) for the author-and-year based search (Last name, First name)."
+    print "Type j(ournal) for a publication specified search."
+    
+
+
 if __name__ == '__main__':
-    print "\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 2.2. \033[0m"
-    print "User experience is optimized with iterm2"
-    print "Latest update on Oct-10-2017"
+    print "\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 2.3. \033[0m"
+    print "User experience is optimized with iTerm2"
+    print "Latest update on Oct-25-2017"
+    print "Type h(elp) for instructions."
     # print "\033[0;32;48m Designed and maintained by Yunyang Li \033[0m"
-    print "type a(uthor) for the (default) author-and-year based search (Last name, First name) or j(ournal) for a publication specified search"
-    print "Alternatively, type the citation for a quick search: e.g., Li, et al., (2017)"
+    
     print
     orderlist = list()
     if len(sys.argv) == 1:
