@@ -1,10 +1,11 @@
+from __future__ import print_function
 import re
 import urllib2
 import time
 import sys
 from multiprocessing import Pool
 import pyperclip
-
+import copy
 
 def get_content(url):
     request = urllib2.Request(url)
@@ -14,6 +15,9 @@ def get_content(url):
 
 
 def scrap_a(fauthor, author_list, year):
+    input_author = copy.deepcopy(author_list)
+    if fauthor:
+        input_author.append(fauthor)
     faut = '%2C'.join(fauthor.split(','))
     faut = '+'.join(faut.split(' '))
     if faut != '':
@@ -55,7 +59,7 @@ def scrap_a(fauthor, author_list, year):
           '&ttl_wgt=YES&txt_wgt=YES&ttl_sco=YES&txt_sco=YES&version=1' % (author, year[0], year[1], 'BIBTEX')
 
     tik = time.time()
-    print 'loading...'
+    print('loading...')
     p = Pool(processes=2)
     results = p.map(get_content, (url, url_bib))
     p.close()
@@ -71,37 +75,43 @@ def scrap_a(fauthor, author_list, year):
         items_bib = re.findall(pattern_bib, content_bib)
 
     except:
-        print '\033[0;31;48m Retrived no result \033[0m'
+        print('\033[0;31;48m Retrived no result \033[0m')
         return 1
 
     pattern2 = re.compile('nowrap>(.*?)colspan=6', re.S)
     items = re.findall(pattern2, content_range)
     tok = time.time()
 
-    print 'retrieved in \033[0;31;48m %1.2f \033[0m sec' % (tok-tik)
-    print "\033[0;33;48mnum\033[0m \033[0;31;48mcit\033[0m date"
+    print('retrieved in \033[0;31;48m %1.2f \033[0m sec' % (tok-tik))
+    print("\033[0;33;48mnum\033[0m \033[0;31;48mcit\033[0m date")
 
     def inner_loop(p):
         if p is True:
-            print '%d entries in total'%len(items)
+            print('%d entries in total'%len(items))
         order = raw_input(' continue? \033[0;32;48m >>> \033[0m')
         orderlist.append(order)
         try:
             idx = int(order)
             pyperclip.copy(items_bib[idx-1])
-            print "\033[0;33;48m citation of %d is copied to clipboard \033[0m" % idx
+            print("\033[0;33;48m citation of %d is copied to clipboard \033[0m" % idx)
             return inner_loop(False)
         except ValueError:
             if order == '':
                 return 0
             elif order == 'url'[:len(order)]:
-                print "\033[0;32;48m URL: \033[0m", url
+                print("\033[0;32;48m URL: \033[0m", url)
                 return inner_loop(False)
             elif order == 'exit'[:len(order)] or order == 'quit'[:len(order)] or order == '^[':
                 return 1
             else:
-                print '\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1]
+                print('\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1])
                 return 0
+
+    def check_exist(aut):
+            for inp_aut in input_author:
+                if aut[:len(inp_aut)] == inp_aut:
+                    return 1
+            return 0
 
     for idx, _ in enumerate(items):
         p = re.compile('(\d*?)</td><td.*?"baseline">(\d*?)\.000.*?"baseline">(\d\d)/(\d{4})(.*?)width="25%">(.*?)<.*?colspan=3>(.*?)<', re.S)
@@ -110,13 +120,23 @@ def scrap_a(fauthor, author_list, year):
             continue
         num, cit, mm, yyyy, files, authors, title = elements[0]
         num = int(num)
-
         authors = authors.replace('&#160;', ' ')
         if idx > 0:
-            print
-        print "\033[0;33;48m %s\033[0m" % num, "\033[0;31;48m %s\033[0m" % cit, '%s-%s' % (yyyy, mm)
-        print "\033[0;34;48m %s\033[0m" % authors
-        print "\033[0;32;48m %s\033[0m" % title
+            print( )
+        print("\033[0;33;48m  %s \033[0m" % num, end='')
+        print("\033[0;31;48m  %s \033[0m" % cit, end='')
+        print("%s-%s" % (yyyy, mm))
+        author_split = authors.split('; ')
+        for idx, aut in enumerate(author_split):
+            if idx > 0:
+                print("\033[0;34;48m; \033[0m", end='')
+            if check_exist(aut):
+                print("\033[1;34;48m%s\033[0m"  % aut, end='')
+            else:
+                print("\033[0;34;48m%s\033[0m"  % aut, end='')
+        # print "\033[0;34;48m %s\033[0m" % authors
+        print("\033[0;34;48m \033[0m")
+        print("\033[0;32;48m %s \033[0m" % title)
 
         try:
             pf = re.compile('href="([^"]*?type=ARTICLE)"', re.S)
@@ -124,7 +144,7 @@ def scrap_a(fauthor, author_list, year):
             F = ele[0]
             F = F.replace('&#160;', ' ')
             F = F.replace('#38', 'amp')
-            print "\033[0;36;48m F:\033[0m", F
+            print("\033[0;36;48m F:\033[0m", F)
         except:
             try:
                 pf = re.compile('href="([^"]*?type=EJOURNAL)"', re.S)
@@ -132,14 +152,14 @@ def scrap_a(fauthor, author_list, year):
                 E = ele[0]
                 E = E.replace('&#160;', ' ')
                 E = E.replace('#38', 'amp')
-                print "\033[0;32;48m E:\033[0m", E
+                print("\033[0;32;48m E:\033[0m", E)
             except:
                 try:
                     pf = re.compile('arXiv(\d\d\d\d)(\d*).*?type=PREPRINT', re.S)
                     ele = re.findall(pf, files)
                     a, b = ele[0]
                     X = "https://arxiv.org/pdf/%s.%s.pdf" % (a, b)
-                    print "\033[0;31;48m X:\033[0m", X
+                    print("\033[0;31;48m X:\033[0m", X)
                 except:
                     pass
 
@@ -153,7 +173,7 @@ def scrap_a(fauthor, author_list, year):
             while True:
                 if inner_loop(False) == 1:
                     break
-    print "\033[0;32;48m URL: \033[0m", url
+    print("\033[0;32;48m URL: \033[0m", url)
     return 1
 
 def scrap_j(journal, year, volume, page):
@@ -192,7 +212,7 @@ def scrap_j(journal, year, volume, page):
     url = "http://adsabs.harvard.edu/cgi-bin/nph-abs_connect?version=1&warnings=YES&partial_bibcd=YES&sort=BIBCODE" \
           "&db_key=ALL&bibstem=%s&year=%s&volume=%s&page=%s&nr_to_return=200&start_nr=1" % (journal, year, volume, page)
     tik = time.time()
-    print 'loading...'
+    print('loading...')
     content = get_content(url)
 
     try:
@@ -201,18 +221,18 @@ def scrap_j(journal, year, volume, page):
         content_range = match.group(0)
 
     except:
-        print '\033[0;31;48m Retrived no result \033[0m'
+        print('\033[0;31;48m Retrived no result \033[0m')
         return 1
 
     pattern2 = re.compile('nowrap>(.*?)colspan=6', re.S)
     items = re.findall(pattern2, content_range)
     tok = time.time()
 
-    print 'retrieved in \033[0;31;48m %1.2f \033[0m sec'%(tok - tik)
+    print('retrieved in \033[0;31;48m %1.2f \033[0m sec'%(tok - tik))
 
     def inner_loop(p):
         if p is True:
-            print '%d entries in total' % len(items)
+            print('%d entries in total' % len(items))
         order = raw_input(' continue? \033[0;32;48m >>> \033[0m')
         orderlist.append(order)
         try:
@@ -229,23 +249,23 @@ def scrap_j(journal, year, volume, page):
                     authors.remove('')
                 except ValueError:
                     break
-            print authors
+            print(authors)
             fauthor = authors[0]
             authors = authors[1:]
-            print 'getting citation...'
+            print('getting citation...')
             pyperclip.copy(get_citation(fauthor, authors, yyyy, mm))
-            print "\033[0;33;48m citation of %d is copied to clipboard \033[0m" % idx
+            print("\033[0;33;48m citation of %d is copied to clipboard \033[0m" % idx)
             return inner_loop(False)
         except ValueError:
             if order == '':
                 return 0
             elif order == 'url'[:len(order)]:
-                print "\033[0;32;48m URL: \033[0m", url
+                print("\033[0;32;48m URL: \033[0m", url)
                 return inner_loop(False)
             elif order == 'exit'[:len(order)] or order == 'quit'[:len(order)] or order == '^[':
                 return 1
             else:
-                print '\033[0;31;48m Unrecgonized command: %s \033[0m'%orderlist[-1]
+                print('\033[0;31;48m Unrecgonized command: %s \033[0m'%orderlist[-1])
                 return 0
     entries = list()
     for idx, _ in enumerate(items):
@@ -257,10 +277,10 @@ def scrap_j(journal, year, volume, page):
         num = int(num)
         authors = authors.replace('&#160;', ' ')
         if idx > 0:
-            print
-        print "\033[0;33;48m %s\033[0m" % num, "\033[0;31;48m %s\033[0m"%cit, '%s-%s'%(yyyy, mm)
-        print "\033[0;34;48m %s\033[0m" % authors
-        print "\033[0;32;48m %s\033[0m" % title
+            print()
+        print("\033[0;33;48m %s\033[0m" % num, "\033[0;31;48m %s\033[0m"%cit, '%s-%s'%(yyyy, mm))
+        print("\033[0;34;48m %s\033[0m" % authors)
+        print("\033[0;32;48m %s\033[0m" % title)
         entries.append([authors.split('; '), title, yyyy, mm])
         try:
             pf = re.compile('href="([^"]*?type=ARTICLE)"', re.S)
@@ -268,7 +288,7 @@ def scrap_j(journal, year, volume, page):
             F = ele[0]
             F = F.replace('&#160;', ' ')
             F = F.replace('#38', 'amp')
-            print "\033[0;36;48m F:\033[0m", F
+            print("\033[0;36;48m F:\033[0m", F)
 
         except:
             try:
@@ -277,7 +297,7 @@ def scrap_j(journal, year, volume, page):
                 E = ele[0]
                 E = E.replace('&#160;', ' ')
                 E = E.replace('#38', 'amp')
-                print "\033[0;32;48m E:\033[0m", E
+                print("\033[0;32;48m E:\033[0m", E)
             except:
                 try:
                     pf = re.compile('href="([^"]*?type=PREPRINT)"', re.S)
@@ -285,7 +305,7 @@ def scrap_j(journal, year, volume, page):
                     X = ele[0]
                     X = X.replace('&#160;', ' ')
                     X = X.replace('#38', 'amp')
-                    print "\033[0;31;48m X:\033[0m", X
+                    print("\033[0;31;48m X:\033[0m", X)
                 except:
                     pass
 
@@ -299,13 +319,13 @@ def scrap_j(journal, year, volume, page):
             while True:
                 if inner_loop(False) == 1:
                     break
-    print "\033[0;32;48m URL: \033[0m", url
+    print("\033[0;32;48m URL: \033[0m", url)
     return 1
 
 def scrap_arxiv(id):
     url = "https://arxiv.org/abs/%s" % id
     url_pdf = "https://arxiv.org/pdf/%s.pdf" % id
-    print "\033[0;31;48m X:\033[0m", url_pdf
+    print("\033[0;31;48m X:\033[0m", url_pdf)
 
     def to_author_search():
         content1 = get_content(url)
@@ -355,12 +375,12 @@ def scrap_arxiv(id):
             to_author_search()
             return 1
         elif order == 'url'[:len(order)]:
-            print "\033[0;32;48m URL: \033[0m", url
+            print("\033[0;32;48m URL: \033[0m", url)
             return inner_loop()
         elif order == 'exit'[:len(order)] or order == 'quit'[:len(order)] or order == '^[':
             return 1
         else:
-            print '\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1]
+            print('\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1])
             return 0
 
     while True:
@@ -380,7 +400,7 @@ def get_ainfo():
         return ' '.join(splited)
 
     try:
-        print "\033[0;34;48m Search by author and year:\033[0m"
+        print("\033[0;34;48m Search by author and year:\033[0m")
         a_list = list()
         fauthor=''
         while True:
@@ -409,7 +429,7 @@ def get_ainfo():
 
 
 def get_jinfo():
-        print "\033[0;34;48m Search by publications:\033[0m"
+        print("\033[0;34;48m Search by publications:\033[0m")
         journal = raw_input("journal \033[0;32;48m >>> \033[0m ")
         orderlist.append(journal)
         if (journal == 'exit'[:len(journal)] or journal == 'quit'[:len(journal)]) and len(journal) > 0:
@@ -475,25 +495,24 @@ def standby(order):
                     scrap_a(authors[0], authors[1:], year*2)
 
         except:
-            print '\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1]
+            print('\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1])
         standby(raw_input("\033[0;32;48m >>> \033[0m"))
 
 
 def help():
-    print "Type the citation for a quick search (default): e.g., Li, et al., (2017)."
-    print "Type a(uthor) for the author-and-year based search (Last name, First name)."
-    print "Type j(ournal) for a publication specified search."
+    print("Type the citation for a quick search (default): e.g., Li, et al., (2017).")
+    print("Type a(uthor) for the author-and-year based search (Last name, First name).")
+    print("Type j(ournal) for a publication specified search.")
     
 
 
 if __name__ == '__main__':
-    print "\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 2.3. \033[0m"
-    print "User experience is optimized with iTerm2"
-    print "Latest update on Oct-25-2017"
-    print "Type h(elp) for instructions."
-    # print "\033[0;32;48m Designed and maintained by Yunyang Li \033[0m"
-    
-    print
+    print("\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 2.4. \033[0m")
+    print("User experience is optimized with iTerm2")
+    print("Latest update on Oct-25-2017")
+    print("Type h(elp) for instructions.")
+
+    print( )
     orderlist = list()
     if len(sys.argv) == 1:
         standby(raw_input("\033[0;32;48m >>> \033[0m"))
