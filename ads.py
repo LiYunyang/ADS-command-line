@@ -111,6 +111,13 @@ def scrap_a(fauthor, author_list, year):
             for inp_aut in input_author:
                 if aut[:len(inp_aut)] == inp_aut:
                     return 1
+                else:
+                    try:
+                        idx = aut.find(',')
+                        if aut[:idx+2] == inp_aut[:idx+2]:
+                            return 1
+                    except:
+                        continue
             return 0
 
     for idx, _ in enumerate(items):
@@ -131,7 +138,7 @@ def scrap_a(fauthor, author_list, year):
             if idx > 0:
                 print("\033[0;34;48m; \033[0m", end='')
             if check_exist(aut):
-                print("\033[1;34;48m%s\033[0m"  % aut, end='')
+                print("\033[1;35;48m%s\033[0m"  % aut, end='')
             else:
                 print("\033[0;34;48m%s\033[0m"  % aut, end='')
         # print "\033[0;34;48m %s\033[0m" % authors
@@ -509,7 +516,7 @@ def help():
 if __name__ == '__main__':
     print("\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 2.4. \033[0m")
     print("User experience is optimized with iTerm2")
-    print("Latest update on Oct-25-2017")
+    print("Latest update on Nov-3-2017")
     print("Type h(elp) for instructions.")
 
     print( )
