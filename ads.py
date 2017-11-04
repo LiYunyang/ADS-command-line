@@ -17,6 +17,11 @@ def get_content(url):
 def scrap_a(fauthor, author_list, year):
     if (fauthor.find(',') == -1 and fauthor.find(' ') >= 0):
         spl_lst = fauthor.split(' ')
+        while True:
+            try:
+                spl_lst.remove('')
+            except ValueError:
+                break
         faut = spl_lst[-1] + ', ' + ' '.join(spl_lst[:-1])
     faut = '%2C'.join(fauthor.split(','))
     faut = '+'.join(faut.split(' '))
@@ -25,6 +30,11 @@ def scrap_a(fauthor, author_list, year):
     for i, aut in enumerate(author_list):
         if (aut.find(',') == -1 and aut.find(' ') >= 0):
             spl_lst = aut.split(' ')
+            while True:
+                try:
+                    spl_lst.remove('')
+                except ValueError:
+                    break
             author_list[i] = spl_lst[-1] + ', ' + ' '.join(spl_lst[:-1])
     for i, aut in enumerate(author_list):
         aut_splited = aut.split(',')
@@ -427,6 +437,7 @@ def get_ainfo():
         print("\033[0;34;48m Search by author and year:\033[0m")
         a_list = list()
         fauthor=''
+        year = ['1950', '2050']
         while True:
             get = raw_input('author \033[0;32;48m >>> \033[0m ')
             orderlist.append(get)
@@ -447,6 +458,8 @@ def get_ainfo():
                     a_list.append(format(get))
         if len(year) == 1:
             year *= 2
+        if fauthor == '' and len(a_list) == 0:
+            return 1
         scrap_a(fauthor, a_list, year)
     except:
         return 1
@@ -497,26 +510,30 @@ def standby(order):
                     b = int(b)
                     scrap_arxiv('%d.%d' % (a, b))
                 except:
-                    prmt = prmt.replace('etal', ' ')
-                    prmt = prmt.replace('et al.,', ' ')
-                    prmt = prmt.replace('et al.', ' ')
-                    prmt = prmt.replace('et al,', ' ')
-                    prmt = prmt.replace('et al', ' ')
+                    try:
+                        p = re.compile('(.*?)\(?(\d{4})\)?', re.S)
+                        prmt, year = re.findall(p, prmt)[0]
+                        prmt = prmt.replace('etal', ' ')
+                        prmt = prmt.replace('et al.,', ' ')
+                        prmt = prmt.replace('et al.', ' ')
+                        prmt = prmt.replace('et al,', ' ')
+                        prmt = prmt.replace('et al', ' ')
 
-                    prmt = prmt.replace('&', ' ')
-                    prmt = prmt.replace(' and ', ' ')
-                    prmt = prmt.replace(',', ' ')
-
-                    p = re.compile('(.*?)\(?(\d{4})\)?', re.S)
-                    authors, year = re.findall(p, prmt)[0]
-                    authors = authors.split(' ')
-                    while True:
-                        try:
-                            authors.remove('')
-                        except ValueError:
-                            break
-                    year = [''.join(year)]
-                    scrap_a(authors[0], authors[1:], year*2)
+                        prmt = prmt.replace('&', ' ')
+                        prmt = prmt.replace(' and ', ' ')
+                        prmt = prmt.replace(',', ' ')
+                        authors = prmt.split(' ')
+                        while True:
+                            try:
+                                authors.remove('')
+                            except ValueError:
+                                break
+                        year = [''.join(year)]
+                        scrap_a(authors[0], authors[1:], year*2)
+                    except:
+                        authors = prmt.split(';')
+                        year = ['1950', '2050']
+                        scrap_a('', authors, year)
 
         except:
             print('\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1])
