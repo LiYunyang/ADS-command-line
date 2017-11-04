@@ -7,7 +7,7 @@ from multiprocessing import Pool
 import pyperclip
 import copy
 from html.parser import HTMLParser
-
+import unicodedata
 
 def get_content(url):
     request = urllib2.Request(url)
@@ -135,12 +135,18 @@ def scrap_a(fauthor, author_list, year):
     def check_exist(aut):
         for inp_aut in input_author:
             inp_aut_c = inp_aut.title()
+            inp_aut_c = unicodedata.normalize('NFKD', h.unescape(unicode(inp_aut_c, 'utf-8'))).encode('ASCII', 'ignore')
+            aut = unicodedata.normalize('NFKD', h.unescape(unicode(aut,'utf-8'))).encode('ASCII', 'ignore')
             if aut[:len(inp_aut)] == inp_aut_c:
-                return 1
+                idx = aut.find(',')
+                if idx > -1:
+                    if aut[:idx] == inp_aut_c[:idx]:
+                        return 1
             else:
                 try:
                     idx = aut.find(',')
-                    if aut[:idx+3] == inp_aut_c[:idx+3]:
+                    lim = min(idx+3, min(len(aut), len(inp_aut_c)))
+                    if aut[:lim] == inp_aut_c[:lim]:
                         return 1
                 except:
                     continue
@@ -162,12 +168,13 @@ def scrap_a(fauthor, author_list, year):
         author_split = authors.split('; ')
 
         for idx, aut in enumerate(author_split):
+            toprint = h.unescape(aut)
             if idx == 0:
                 print(" ", end='')
             if check_exist(aut):
-                print("\033[1;35;48m%s\033[0m"  %h.unescape(aut), end='; ' if idx<len(author_split)-1 else '')
+                print("\033[1;35;48m%s\033[0m"  % toprint, end='; ' if idx<len(author_split)-1 else '')
             else:
-                print("\033[0;34;48m%s\033[0m"  %h.unescape(aut), end='; ' if idx<len(author_split)-1 else '')
+                print("\033[0;34;48m%s\033[0m"  % toprint, end='; ' if idx<len(author_split)-1 else '')
             if aut == '':
                 print("etc.", end='')
         # print "\033[0;34;48m %s\033[0m" % authors
@@ -315,7 +322,16 @@ def scrap_j(journal, year, volume, page):
         if idx > 0:
             print()
         print("\033[0;33;48m %s\033[0m" % num, "\033[0;31;48m %s\033[0m"%cit, '%s-%s'%(yyyy, mm))
-        print("\033[0;34;48m %s\033[0m" % h.unescape(authors))
+        author_split = authors.split('; ')
+
+        for idx, aut in enumerate(author_split):
+            toprint = h.unescape(aut)
+            if idx == 0:
+                print(" ", end='')
+            print("\033[0;34;48m%s\033[0m"  % toprint, end='; ' if idx<len(author_split)-1 else '')
+            if aut == '':
+                print("etc.", end='')
+        print("\033[0;34;48m \033[0m")
         print("\033[0;32;48m %s\033[0m" % title)
         entries.append([authors.split('; '), title, yyyy, mm])
         try:
