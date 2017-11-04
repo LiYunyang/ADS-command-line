@@ -15,9 +15,6 @@ def get_content(url):
 
 
 def scrap_a(fauthor, author_list, year):
-    input_author = copy.deepcopy(author_list)
-    if fauthor:
-        input_author.append(fauthor)
     faut = '%2C'.join(fauthor.split(','))
     faut = '+'.join(faut.split(' '))
     if faut != '':
@@ -31,6 +28,15 @@ def scrap_a(fauthor, author_list, year):
             temp = temp.replace(',', '%2C')
             author_list[i] = '%0D%0A' + temp
     author = faut + ''.join(author_list)
+    
+    input_author = copy.deepcopy(author)
+    input_author = input_author.replace('%5E', '')
+    input_author = input_author.replace('%0D%0A', '; ')
+    input_author = input_author.replace('%2C+', ', ')
+    input_author = input_author.replace('%2C', ', ')
+    input_author = input_author.split('; ')
+    if input_author[0] == '':
+        input_author = input_author[1:]
     url = 'http://adsabs.harvard.edu/cgi-bin/nph-abs_connect?db_key=AST&db_key=PRE&qform=AST&arxiv_sel' \
           '=astro-ph&arxiv_sel=cond-mat&arxiv_sel=cs&arxiv_sel=gr-qc&arxiv_sel=hep-ex&arxiv_sel=hep-lat' \
           '&arxiv_sel=hep-ph&arxiv_sel=hep-th&arxiv_sel=math&arxiv_sel=math-ph&arxiv_sel=nlin&arxiv_sel' \
@@ -108,18 +114,18 @@ def scrap_a(fauthor, author_list, year):
                 return 0
 
     def check_exist(aut):
-            for inp_aut in input_author:
-                inp_aut_c = inp_aut.title()
-                if aut[:len(inp_aut)] == inp_aut_c:
-                    return 1
-                else:
-                    try:
-                        idx = aut.find(',')
-                        if aut[:idx+3] == inp_aut_c[:idx+3]:
-                            return 1
-                    except:
-                        continue
-            return 0
+        for inp_aut in input_author:
+            inp_aut_c = inp_aut.title()
+            if aut[:len(inp_aut)] == inp_aut_c:
+                return 1
+            else:
+                try:
+                    idx = aut.find(',')
+                    if aut[:idx+3] == inp_aut_c[:idx+3]:
+                        return 1
+                except:
+                    continue
+        return 0
 
     for idx, _ in enumerate(items):
         p = re.compile('(\d*?)</td><td.*?"baseline">(\d*?)\.000.*?"baseline">(\d\d)/(\d{4})(.*?)width="25%">(.*?)<.*?colspan=3>(.*?)<', re.S)
@@ -135,6 +141,7 @@ def scrap_a(fauthor, author_list, year):
         print("\033[0;31;48m  %s \033[0m" % cit, end='')
         print("%s-%s" % (yyyy, mm))
         author_split = authors.split('; ')
+
         for idx, aut in enumerate(author_split):
             if idx == 0:
                 print(" ", end='')
