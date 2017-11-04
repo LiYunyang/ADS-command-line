@@ -181,7 +181,7 @@ def scrap_a(fauthor, author_list, year):
                 print("etc.", end='')
 
         print("\033[0;34;48m \033[0m")
-        print("\033[0;32;48m %s \033[0m" % h.unescape(title), end='')
+        print("\033[0;32;48m %s \033[0m" % h.unescape(title))
 
         try:
             pf = re.compile('href="([^"]*?type=ARTICLE)"', re.S)
@@ -192,10 +192,9 @@ def scrap_a(fauthor, author_list, year):
             pj = re.compile('\d\d\d\d(.*?)\.', re.S)
             j = re.findall(pj, F)[0]
             j = j.replace('%26', '&')
-            print(h.unescape(j))
-            print("\033[0;36;48m F:\033[0m", end=' ')
+            print(' ', end='')
+            print(h.unescape(j), end=': ')
             print("\033[1;30;48m%s\033[0m" % F)
-
 
         except:
             try:
@@ -207,13 +206,12 @@ def scrap_a(fauthor, author_list, year):
                 pj = re.compile('\d\d\d\d(.*?)\.', re.S)
                 j = re.findall(pj, E)[0]
                 j = j.replace('%26', '&')
-                print(h.unescape(j))
-                print("\033[0;36;48m F:\033[0m", end=' ')
+                print(' ', end='')
+                print(h.unescape(j), end=': ')
                 print("\033[1;30;48m%s\033[0m" % E)
 
 
             except:
-                print()
                 try:
                     pf = re.compile('arXiv(\d\d\d\d)(\d*).*?type=PREPRINT', re.S)
                     ele = re.findall(pf, files)
@@ -235,6 +233,7 @@ def scrap_a(fauthor, author_list, year):
                     break
     print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m"% url)
     return 1
+
 
 def scrap_j(journal, year, volume, page):
 
@@ -288,8 +287,8 @@ def scrap_j(journal, year, volume, page):
     items = re.findall(pattern2, content_range)
     tok = time.time()
 
-    print('retrieved in \033[0;31;48m %1.2f \033[0m sec'%(tok - tik))
-
+    print('retrieved in \033[0;31;48m %1.2f \033[0m sec' % (tok - tik))
+    print("\033[0;33;48mnum\033[0m  date")
     def inner_loop(p):
         if p is True:
             print('%d entries in total' % len(items))
@@ -320,7 +319,7 @@ def scrap_j(journal, year, volume, page):
             if order == '':
                 return 0
             elif order == 'url'[:len(order)]:
-                print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m" %url)
+                print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m" % url)
                 return inner_loop(False)
             elif order == 'exit'[:len(order)] or order == 'quit'[:len(order)] or order == '^[':
                 return 1
@@ -338,14 +337,14 @@ def scrap_j(journal, year, volume, page):
         authors = authors.replace('&#160;', ' ')
         if idx > 0:
             print()
-        print("\033[0;33;48m %s\033[0m" % num, "\033[0;31;48m %s\033[0m"%cit, '%s-%s'%(yyyy, mm))
+        print("\033[0;33;48m %s \033[0m" % num, ' %s-%s' % (yyyy, mm))
         author_split = authors.split('; ')
 
         for idx, aut in enumerate(author_split):
             toprint = h.unescape(aut)
             if idx == 0:
                 print(" ", end='')
-            print("\033[0;34;48m%s\033[0m"  % toprint, end='; ' if idx<len(author_split)-1 else '')
+            print("\033[0;34;48m%s\033[0m" % toprint, end='; ' if idx<len(author_split)-1 else '')
             if aut == '':
                 print("etc.", end='')
         print("\033[0;34;48m \033[0m")
@@ -357,7 +356,12 @@ def scrap_j(journal, year, volume, page):
             F = ele[0]
             F = F.replace('&#160;', ' ')
             F = F.replace('#38', 'amp')
-            print("\033[0;36;48m F:\033[0m\033[1;30;48m%s\033[0m" %F)
+            pj = re.compile('\d\d\d\d(.*?)\.', re.S)
+            j = re.findall(pj, F)[0]
+            j = j.replace('%26', '&')
+            print(' ', end='')
+            print(h.unescape(j), end=': ')
+            print("\033[1;30;48m%s\033[0m" % F)
 
         except:
             try:
@@ -366,7 +370,12 @@ def scrap_j(journal, year, volume, page):
                 E = ele[0]
                 E = E.replace('&#160;', ' ')
                 E = E.replace('#38', 'amp')
-                print("\033[0;32;48m E:\033[0m\033[1;30;48m%s\033[0m" %E)
+                pj = re.compile('\d\d\d\d(.*?)\.', re.S)
+                j = re.findall(pj, E)[0]
+                j = j.replace('%26', '&')
+                print(' ', end='')
+                print(h.unescape(j), end=': ')
+                print("\033[1;30;48m%s\033[0m" % E)
             except:
                 try:
                     pf = re.compile('href="([^"]*?type=PREPRINT)"', re.S)
@@ -374,7 +383,7 @@ def scrap_j(journal, year, volume, page):
                     X = ele[0]
                     X = X.replace('&#160;', ' ')
                     X = X.replace('#38', 'amp')
-                    print("\033[0;31;48m X:\033[0m\033[1;30;48m%s\033[0m" %X)
+                    print("\033[0;31;48m X:\033[0m\033[1;30;48m%s\033[0m" % X)
                 except:
                     pass
 
@@ -501,7 +510,7 @@ def get_ainfo():
 
 
 def get_jinfo():
-        print("\033[0;34;48m Search by publications:\033[0m")
+        print("\033[0;34;48m Search by journal:\033[0m")
         journal = raw_input("journal \033[0;32;48m >>> \033[0m ")
         orderlist.append(journal)
         if (journal == 'exit'[:len(journal)] or journal == 'quit'[:len(journal)]) and len(journal) > 0:
@@ -584,12 +593,11 @@ def help():
 
 if __name__ == '__main__':
     h = HTMLParser()
-    print("\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 2.4. \033[0m")
+    print("\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 3. \033[0m")
     print("User experience is optimized with iTerm2")
-    print("Latest update on Nov-3-2017")
+    print("Latest update on Nov-4-2017")
     print("Type h(elp) for instructions.")
-
-    print( )
+    print()
     orderlist = list()
     if len(sys.argv) == 1:
         standby(raw_input("\033[0;32;48m >>> \033[0m"))
