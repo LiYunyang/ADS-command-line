@@ -6,6 +6,8 @@ import sys
 from multiprocessing import Pool
 import pyperclip
 import copy
+from html.parser import HTMLParser
+
 
 def get_content(url):
     request = urllib2.Request(url)
@@ -163,9 +165,9 @@ def scrap_a(fauthor, author_list, year):
             if idx == 0:
                 print(" ", end='')
             if check_exist(aut):
-                print("\033[1;35;48m%s\033[0m"  % aut, end='; ' if idx<len(author_split)-1 else '')
+                print("\033[1;35;48m%s\033[0m"  %h.unescape(aut), end='; ' if idx<len(author_split)-1 else '')
             else:
-                print("\033[0;34;48m%s\033[0m"  % aut, end='; ' if idx<len(author_split)-1 else '')
+                print("\033[0;34;48m%s\033[0m"  %h.unescape(aut), end='; ' if idx<len(author_split)-1 else '')
             if aut == '':
                 print("etc.", end='')
         # print "\033[0;34;48m %s\033[0m" % authors
@@ -313,7 +315,7 @@ def scrap_j(journal, year, volume, page):
         if idx > 0:
             print()
         print("\033[0;33;48m %s\033[0m" % num, "\033[0;31;48m %s\033[0m"%cit, '%s-%s'%(yyyy, mm))
-        print("\033[0;34;48m %s\033[0m" % authors)
+        print("\033[0;34;48m %s\033[0m" % h.unescape(authors))
         print("\033[0;32;48m %s\033[0m" % title)
         entries.append([authors.split('; '), title, yyyy, mm])
         try:
@@ -548,6 +550,7 @@ def help():
 
 
 if __name__ == '__main__':
+    h = HTMLParser()
     print("\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 2.4. \033[0m")
     print("User experience is optimized with iTerm2")
     print("Latest update on Nov-3-2017")
