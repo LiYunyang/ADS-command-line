@@ -37,7 +37,9 @@ def scrap_a(fauthor, author_list, year):
                     spl_lst.remove('')
                 except ValueError:
                     break
-            author_list[i] = spl_lst[-1] + ', ' + ' '.join(spl_lst[:-1])
+            author_list[i] = spl_lst[-1].replace('.', '') + ', ' + ' '.join(spl_lst[:-1])
+        else:
+            author_list[i] = aut.replace('.,', ',')
     for i, aut in enumerate(author_list):
         aut_splited = aut.split(',')
         if aut_splited[-1] == '':
@@ -179,7 +181,7 @@ def scrap_a(fauthor, author_list, year):
                 print("etc.", end='')
         # print "\033[0;34;48m %s\033[0m" % authors
         print("\033[0;34;48m \033[0m")
-        print("\033[0;32;48m %s \033[0m" % title)
+        print("\033[0;32;48m %s \033[0m" % h.unescape(title))
 
         try:
             pf = re.compile('href="([^"]*?type=ARTICLE)"', re.S)
@@ -332,7 +334,7 @@ def scrap_j(journal, year, volume, page):
             if aut == '':
                 print("etc.", end='')
         print("\033[0;34;48m \033[0m")
-        print("\033[0;32;48m %s\033[0m" % title)
+        print("\033[0;32;48m %s \033[0m" % h.unescape(title))
         entries.append([authors.split('; '), title, yyyy, mm])
         try:
             pf = re.compile('href="([^"]*?type=ARTICLE)"', re.S)
