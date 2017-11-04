@@ -109,12 +109,13 @@ def scrap_a(fauthor, author_list, year):
 
     def check_exist(aut):
             for inp_aut in input_author:
-                if aut[:len(inp_aut)] == inp_aut:
+                inp_aut_c = inp_aut.title()
+                if aut[:len(inp_aut)] == inp_aut_c:
                     return 1
                 else:
                     try:
                         idx = aut.find(',')
-                        if aut[:idx+2] == inp_aut[:idx+2]:
+                        if aut[:idx+3] == inp_aut_c[:idx+3]:
                             return 1
                     except:
                         continue
@@ -135,12 +136,14 @@ def scrap_a(fauthor, author_list, year):
         print("%s-%s" % (yyyy, mm))
         author_split = authors.split('; ')
         for idx, aut in enumerate(author_split):
-            if idx > 0:
-                print("\033[0;34;48m; \033[0m", end='')
+            if idx == 0:
+                print(" ", end='')
             if check_exist(aut):
-                print("\033[1;35;48m%s\033[0m"  % aut, end='')
+                print("\033[1;35;48m%s\033[0m"  % aut, end='; ' if idx<len(author_split)-1 else '')
             else:
-                print("\033[0;34;48m%s\033[0m"  % aut, end='')
+                print("\033[0;34;48m%s\033[0m"  % aut, end='; ' if idx<len(author_split)-1 else '')
+            if aut == '':
+                print("etc.", end='')
         # print "\033[0;34;48m %s\033[0m" % authors
         print("\033[0;34;48m \033[0m")
         print("\033[0;32;48m %s \033[0m" % title)
