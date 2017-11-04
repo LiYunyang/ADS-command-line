@@ -126,7 +126,7 @@ def scrap_a(fauthor, author_list, year):
             if order == '':
                 return 0
             elif order == 'url'[:len(order)]:
-                print("\033[0;32;48m URL: \033[0m", url)
+                print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m" % url)
                 return inner_loop(False)
             elif order == 'exit'[:len(order)] or order == 'quit'[:len(order)] or order == '^[':
                 return 1
@@ -179,9 +179,9 @@ def scrap_a(fauthor, author_list, year):
                 print("\033[0;34;48m%s\033[0m"  % toprint, end='; ' if idx<len(author_split)-1 else '')
             if aut == '':
                 print("etc.", end='')
-        # print "\033[0;34;48m %s\033[0m" % authors
+
         print("\033[0;34;48m \033[0m")
-        print("\033[0;32;48m %s \033[0m" % h.unescape(title))
+        print("\033[0;32;48m %s \033[0m" % h.unescape(title), end='')
 
         try:
             pf = re.compile('href="([^"]*?type=ARTICLE)"', re.S)
@@ -189,7 +189,14 @@ def scrap_a(fauthor, author_list, year):
             F = ele[0]
             F = F.replace('&#160;', ' ')
             F = F.replace('#38', 'amp')
-            print("\033[0;36;48m F:\033[0m", F)
+            pj = re.compile('\d\d\d\d(.*?)\.', re.S)
+            j = re.findall(pj, F)[0]
+            j = j.replace('%26', '&')
+            print(h.unescape(j))
+            print("\033[0;36;48m F:\033[0m", end=' ')
+            print("\033[1;30;48m%s\033[0m" % F)
+
+
         except:
             try:
                 pf = re.compile('href="([^"]*?type=EJOURNAL)"', re.S)
@@ -197,14 +204,22 @@ def scrap_a(fauthor, author_list, year):
                 E = ele[0]
                 E = E.replace('&#160;', ' ')
                 E = E.replace('#38', 'amp')
-                print("\033[0;32;48m E:\033[0m", E)
+                pj = re.compile('\d\d\d\d(.*?)\.', re.S)
+                j = re.findall(pj, E)[0]
+                j = j.replace('%26', '&')
+                print(h.unescape(j))
+                print("\033[0;36;48m F:\033[0m", end=' ')
+                print("\033[1;30;48m%s\033[0m" % E)
+
+
             except:
+                print()
                 try:
                     pf = re.compile('arXiv(\d\d\d\d)(\d*).*?type=PREPRINT', re.S)
                     ele = re.findall(pf, files)
                     a, b = ele[0]
                     X = "https://arxiv.org/pdf/%s.%s.pdf" % (a, b)
-                    print("\033[0;31;48m X:\033[0m", X)
+                    print("\033[0;31;48m X: \033[0m\033[1;30;48m%s\033[0m" % X)
                 except:
                     pass
 
@@ -218,7 +233,7 @@ def scrap_a(fauthor, author_list, year):
             while True:
                 if inner_loop(False) == 1:
                     break
-    print("\033[0;32;48m URL: \033[0m", url)
+    print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m"% url)
     return 1
 
 def scrap_j(journal, year, volume, page):
@@ -305,7 +320,7 @@ def scrap_j(journal, year, volume, page):
             if order == '':
                 return 0
             elif order == 'url'[:len(order)]:
-                print("\033[0;32;48m URL: \033[0m", url)
+                print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m" %url)
                 return inner_loop(False)
             elif order == 'exit'[:len(order)] or order == 'quit'[:len(order)] or order == '^[':
                 return 1
@@ -342,7 +357,7 @@ def scrap_j(journal, year, volume, page):
             F = ele[0]
             F = F.replace('&#160;', ' ')
             F = F.replace('#38', 'amp')
-            print("\033[0;36;48m F:\033[0m", F)
+            print("\033[0;36;48m F:\033[0m\033[1;30;48m%s\033[0m" %F)
 
         except:
             try:
@@ -351,7 +366,7 @@ def scrap_j(journal, year, volume, page):
                 E = ele[0]
                 E = E.replace('&#160;', ' ')
                 E = E.replace('#38', 'amp')
-                print("\033[0;32;48m E:\033[0m", E)
+                print("\033[0;32;48m E:\033[0m\033[1;30;48m%s\033[0m" %E)
             except:
                 try:
                     pf = re.compile('href="([^"]*?type=PREPRINT)"', re.S)
@@ -359,7 +374,7 @@ def scrap_j(journal, year, volume, page):
                     X = ele[0]
                     X = X.replace('&#160;', ' ')
                     X = X.replace('#38', 'amp')
-                    print("\033[0;31;48m X:\033[0m", X)
+                    print("\033[0;31;48m X:\033[0m\033[1;30;48m%s\033[0m" %X)
                 except:
                     pass
 
@@ -373,13 +388,13 @@ def scrap_j(journal, year, volume, page):
             while True:
                 if inner_loop(False) == 1:
                     break
-    print("\033[0;32;48m URL: \033[0m", url)
+    print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m" % url)
     return 1
 
 def scrap_arxiv(id):
     url = "https://arxiv.org/abs/%s" % id
     url_pdf = "https://arxiv.org/pdf/%s.pdf" % id
-    print("\033[0;31;48m X:\033[0m", url_pdf)
+    print("\033[0;31;48m X:\033[0m\033[1;30;48m%s\033[0m" % url_pdf)
 
     def to_author_search():
         content1 = get_content(url)
@@ -429,7 +444,7 @@ def scrap_arxiv(id):
             to_author_search()
             return 1
         elif order == 'url'[:len(order)]:
-            print("\033[0;32;48m URL: \033[0m", url)
+            print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m" % url)
             return inner_loop()
         elif order == 'exit'[:len(order)] or order == 'quit'[:len(order)] or order == '^[':
             return 1
