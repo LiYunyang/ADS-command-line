@@ -15,10 +15,17 @@ def get_content(url):
 
 
 def scrap_a(fauthor, author_list, year):
+    if (fauthor.find(',') == -1 and fauthor.find(' ') >= 0):
+        spl_lst = fauthor.split(' ')
+        faut = spl_lst[-1] + ', ' + ' '.join(spl_lst[:-1])
     faut = '%2C'.join(fauthor.split(','))
     faut = '+'.join(faut.split(' '))
     if faut != '':
         faut = '%5E' + faut
+    for i, aut in enumerate(author_list):
+        if (aut.find(',') == -1 and aut.find(' ') >= 0):
+            spl_lst = aut.split(' ')
+            author_list[i] = spl_lst[-1] + ', ' + ' '.join(spl_lst[:-1])
     for i, aut in enumerate(author_list):
         aut_splited = aut.split(',')
         if aut_splited[-1] == '':
