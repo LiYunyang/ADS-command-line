@@ -8,6 +8,7 @@ import pyperclip
 import copy
 from html.parser import HTMLParser
 import unicodedata
+import os
 
 def get_content(url):
     request = urllib2.Request(url)
@@ -17,7 +18,7 @@ def get_content(url):
 
 
 def scrap_a(fauthor, author_list, year):
-    if (fauthor.find(',') == -1 and fauthor.find(' ') >= 0):
+    if fauthor.find(',') == -1 and fauthor.find(' ') >= 0:
         spl_lst = fauthor.split(' ')
         while True:
             try:
@@ -86,7 +87,7 @@ def scrap_a(fauthor, author_list, year):
           '&ttl_wgt=YES&txt_wgt=YES&ttl_sco=YES&txt_sco=YES&version=1' % (author, year[0], year[1], 'BIBTEX')
 
     tik = time.time()
-    print('loading...')
+    print(' loading...')
     p = Pool(processes=2)
     results = p.map(get_content, (url, url_bib))
     p.close()
@@ -100,7 +101,6 @@ def scrap_a(fauthor, author_list, year):
 
         pattern_bib = re.compile('(@[\w]*?{.*?}\n})', re.S)
         items_bib = re.findall(pattern_bib, content_bib)
-
     except:
         print('\033[0;31;48m Retrived no result \033[0m')
         return 1
@@ -108,13 +108,11 @@ def scrap_a(fauthor, author_list, year):
     pattern2 = re.compile('nowrap>(.*?)colspan=6', re.S)
     items = re.findall(pattern2, content_range)
     tok = time.time()
-
-    print('retrieved in \033[0;31;48m %1.2f \033[0m sec' % (tok-tik))
-    print("\033[0;33;48mnum\033[0m \033[0;31;48mcit\033[0m date")
+    print(' retrieved in \033[0;31;48m %1.2f \033[0m sec' % (tok - tik))
 
     def inner_loop(p):
         if p is True:
-            print('%d entries in total'%len(items))
+            print(' %d entries in total'%len(items))
         order = raw_input(' continue? \033[0;32;48m >>> \033[0m')
         orderlist.append(order)
         try:
@@ -128,11 +126,34 @@ def scrap_a(fauthor, author_list, year):
             elif order == 'url'[:len(order)]:
                 print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m" % url)
                 return inner_loop(False)
-            elif order == 'exit'[:len(order)] or order == 'quit'[:len(order)] or order == '^[':
+            elif order == 'exit'[:len(order)] or order == '^[':
                 return 1
+            elif order == 'quit'[:len(order)]:
+                os._exit(0)
             else:
                 print('\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1])
                 return 0
+
+    def get_hindex():
+        for idx, _ in enumerate(items):
+            p = re.compile('(\d*?)</td><td.*?"baseline">(\d*?)\.000', re.S)
+            elements = re.findall(p, _)
+            if not elements:
+                continue
+            num, cit = elements[0]
+            if int(num) > int(cit):
+                return int(num)-1
+        return '> %d' % (int(num))
+
+    if len(author_list) == 1 and fauthor == '':
+        print("\033[0;33;48m H-index = %s \033[0m" % get_hindex())
+        response = inner_loop(False)
+        if response == 0:
+            pass
+        elif response == 1:
+            return 1
+
+    print("\033[0;33;48m num\033[0m \033[0;31;48mcit\033[0m date")
 
     def check_exist(aut):
         for inp_aut in input_author:
@@ -163,22 +184,24 @@ def scrap_a(fauthor, author_list, year):
         num = int(num)
         authors = authors.replace('&#160;', ' ')
         if idx > 0:
-            print( )
+            print()
         print("\033[0;33;48m  %s \033[0m" % num, end='')
         print("\033[0;31;48m  %s \033[0m" % cit, end='')
         print("%s-%s" % (yyyy, mm))
         author_split = authors.split('; ')
 
+        exist_print = 0
         for idx, aut in enumerate(author_split):
             toprint = h.unescape(aut)
             if idx == 0:
                 print(" ", end='')
             if check_exist(aut):
-                print("\033[1;35;48m%s\033[0m"  % toprint, end='; ' if idx<len(author_split)-1 else '')
+                print("\033[1;35;48m%s\033[0m" % toprint, end='; ' if idx < len(author_split)-1 else '')
+                exist_print = 1
             else:
-                print("\033[0;34;48m%s\033[0m"  % toprint, end='; ' if idx<len(author_split)-1 else '')
+                print("\033[0;34;48m%s\033[0m" % toprint, end='; ' if idx < len(author_split)-1 else '')
             if aut == '':
-                print("etc.", end='')
+                print("etc.", end='') if exist_print == 1 else print("\033[1;35;48metc.\033[0m", end='')
 
         print("\033[0;34;48m \033[0m")
         print("\033[0;32;48m %s \033[0m" % h.unescape(title))
@@ -209,7 +232,6 @@ def scrap_a(fauthor, author_list, year):
                 print(' ', end='')
                 print(h.unescape(j), end=': ')
                 print("\033[1;30;48m%s\033[0m" % E)
-
 
             except:
                 try:
@@ -256,7 +278,7 @@ def scrap_j(journal, year, volume, page):
                   '&ned_query=YES&adsobj_query=YES&aut_logic=AND&obj_logic=OR' \
                   '&author=%s' \
                   '&object=&start_mon=%s&start_year=%s&end_mon=%s&end_year=%s' \
-                  '&ttl_logic=OR&title=&txt_logic=OR&text=&nr_to_return=200&start_nr=1&jou_pick=ALL&ref_stems=&data_and=ALL' \
+                  '&ttl_logic=OR&title=&txt_logic=OR&text=&nr_to_return=100&start_nr=1&jou_pick=ALL&ref_stems=&data_and=ALL' \
                   '&group_and=ALL&start_entry_day=&start_entry_mon=&start_entry_year=&end_entry_day=' \
                   '&end_entry_mon=&end_entry_year=&min_score=' \
                   '&sort=CITATIONS&data_type=%s&aut_syn=YES&ttl_syn=YES&txt_syn=YES' \
@@ -269,9 +291,9 @@ def scrap_j(journal, year, volume, page):
         return items_bib[0]
 
     url = "http://adsabs.harvard.edu/cgi-bin/nph-abs_connect?version=1&warnings=YES&partial_bibcd=YES&sort=BIBCODE" \
-          "&db_key=ALL&bibstem=%s&year=%s&volume=%s&page=%s&nr_to_return=200&start_nr=1" % (journal, year, volume, page)
+          "&db_key=ALL&bibstem=%s&year=%s&volume=%s&page=%s&nr_to_return=100&start_nr=1" % (journal, year, volume, page)
     tik = time.time()
-    print('loading...')
+    print(' loading...')
     content = get_content(url)
 
     try:
@@ -288,10 +310,11 @@ def scrap_j(journal, year, volume, page):
     tok = time.time()
 
     print('retrieved in \033[0;31;48m %1.2f \033[0m sec' % (tok - tik))
-    print("\033[0;33;48mnum\033[0m  date")
+    print("\033[0;33;48m num\033[0m  date")
+
     def inner_loop(p):
         if p is True:
-            print('%d entries in total' % len(items))
+            print(' %d entries in total' % len(items))
         order = raw_input(' continue? \033[0;32;48m >>> \033[0m')
         orderlist.append(order)
         try:
@@ -321,11 +344,14 @@ def scrap_j(journal, year, volume, page):
             elif order == 'url'[:len(order)]:
                 print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m" % url)
                 return inner_loop(False)
-            elif order == 'exit'[:len(order)] or order == 'quit'[:len(order)] or order == '^[':
+            elif order == 'exit'[:len(order)] or order == '^[':
                 return 1
+            elif order == 'quit'[:len(order)]:
+                os._exit(0)
             else:
                 print('\033[0;31;48m Unrecgonized command: %s \033[0m'%orderlist[-1])
                 return 0
+
     entries = list()
     for idx, _ in enumerate(items):
         p = re.compile('(\d*?)</td><td.*?"baseline">(\d*?)\.000.*?"baseline">(\d\d)/(\d{4})(.*?)width="25%">(.*?)<.*?colspan=3>(.*?)<', re.S)
@@ -400,6 +426,7 @@ def scrap_j(journal, year, volume, page):
     print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m" % url)
     return 1
 
+
 def scrap_arxiv(id):
     url = "https://arxiv.org/abs/%s" % id
     url_pdf = "https://arxiv.org/pdf/%s.pdf" % id
@@ -455,8 +482,10 @@ def scrap_arxiv(id):
         elif order == 'url'[:len(order)]:
             print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m" % url)
             return inner_loop()
-        elif order == 'exit'[:len(order)] or order == 'quit'[:len(order)] or order == '^[':
+        elif order == 'exit'[:len(order)] or order == '^[':
             return 1
+        elif order == 'quit'[:len(order)]:
+            os._exit(0)
         else:
             print('\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1])
             return 0
@@ -487,8 +516,10 @@ def get_ainfo():
             orderlist.append(get)
             if get == '':
                 break
-            if get == 'exit'[:len(get)] or get == 'quit'[:len(get)]:
+            if get == 'exit'[:len(get)]:
                 return 1
+            if get == 'quit'[:len(get)]:
+                os._exit(0)
             if get == '\x1b[A':
                 a_list.pop()
                 continue
@@ -513,20 +544,28 @@ def get_jinfo():
         print("\033[0;34;48m Search by journal:\033[0m")
         journal = raw_input("journal \033[0;32;48m >>> \033[0m ")
         orderlist.append(journal)
-        if (journal == 'exit'[:len(journal)] or journal == 'quit'[:len(journal)]) and len(journal) > 0:
+        if journal == 'exit'[:len(journal)] and len(journal) > 0:
             return 1
+        if journal == 'quit'[:len(journal)]:
+            os._exit(0)
         year = raw_input("year \033[0;32;48m >>> \033[0m")
         orderlist.append(year)
-        if (year == 'exit'[:len(year)] or year == 'quit'[:len(year)]) and len(year)>0:
+        if year == 'exit'[:len(year)] and len(year)>0:
             return 1
+        if year == 'quit'[:len(year)]:
+            os._exit(0)
         volume = raw_input('volume \033[0;32;48m >>> \033[0m ')
         orderlist.append(volume)
-        if (volume == 'exit'[:len(volume)] or volume == 'quit'[:len(volume)]) and len(volume) > 0:
+        if volume == 'exit'[:len(volume)]  and len(volume) > 0:
             return 1
+        elif volume == 'quit'[:len(volume)]:
+            os._exit(0)
         page = raw_input('page \033[0;32;48m >>> \033[0m ')
         orderlist.append(page)
-        if (page == 'exit'[:len(page)] or page == 'quit'[:len(page)]) and len(page) > 0:
+        if page == 'exit'[:len(page)] and len(page) > 0:
             return 1
+        if page == 'quit'[:len(page)]:
+            os._exit(0)
         scrap_j(journal, year, volume, page)
 
 
@@ -593,9 +632,9 @@ def help():
 
 if __name__ == '__main__':
     h = HTMLParser()
-    print("\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 3. \033[0m")
+    print("\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 3.1 \033[0m")
     print("User experience is optimized with iTerm2")
-    print("Latest update on Nov-4-2017")
+    print("Latest update on Nov-5-2017")
     print("Type h(elp) for instructions.")
     print()
     orderlist = list()
