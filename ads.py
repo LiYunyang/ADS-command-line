@@ -147,11 +147,14 @@ def scrap_a(fauthor, author_list, year):
 
     if len(author_list) == 1 and fauthor == '':
         print("\033[0;33;48m H-index = %s \033[0m" % get_hindex())
-        response = inner_loop(False)
-        if response == 0:
+        if year==['1950', '2050']:
+            response = inner_loop(False)
+            if response == 0:
+                pass
+            elif response == 1:
+                return 1
+        else:
             pass
-        elif response == 1:
-            return 1
 
     print("\033[0;33;48m num\033[0m \033[0;31;48mcit\033[0m date")
 
@@ -197,7 +200,8 @@ def scrap_a(fauthor, author_list, year):
                 print(" ", end='')
             if check_exist(aut):
                 print("\033[1;35;48m%s\033[0m" % toprint, end='; ' if idx < len(author_split)-1 else '')
-                exist_print = 1
+                if idx < len(author_split)-1:
+                    exist_print = 1
             else:
                 print("\033[0;34;48m%s\033[0m" % toprint, end='; ' if idx < len(author_split)-1 else '')
             if aut == '':
@@ -215,6 +219,8 @@ def scrap_a(fauthor, author_list, year):
             pj = re.compile('\d\d\d\d(.*?)\.', re.S)
             j = re.findall(pj, F)[0]
             j = j.replace('%26', '&')
+            if j == 'Natur': j='Nature'
+            if j == 'Sci': j='Science'
             print(' ', end='')
             print(h.unescape(j), end=': ')
             print("\033[1;30;48m%s\033[0m" % F)
@@ -229,6 +235,8 @@ def scrap_a(fauthor, author_list, year):
                 pj = re.compile('\d\d\d\d(.*?)\.', re.S)
                 j = re.findall(pj, E)[0]
                 j = j.replace('%26', '&')
+                if j == 'Natur': j='Nature'
+                if j == 'Sci': j='Science'
                 print(' ', end='')
                 print(h.unescape(j), end=': ')
                 print("\033[1;30;48m%s\033[0m" % E)
@@ -385,6 +393,8 @@ def scrap_j(journal, year, volume, page):
             pj = re.compile('\d\d\d\d(.*?)\.', re.S)
             j = re.findall(pj, F)[0]
             j = j.replace('%26', '&')
+            if j == 'Natur': j='Nature'
+            if j == 'Sci': j='Science'
             print(' ', end='')
             print(h.unescape(j), end=': ')
             print("\033[1;30;48m%s\033[0m" % F)
@@ -399,6 +409,8 @@ def scrap_j(journal, year, volume, page):
                 pj = re.compile('\d\d\d\d(.*?)\.', re.S)
                 j = re.findall(pj, E)[0]
                 j = j.replace('%26', '&')
+                if j == 'Natur': j='Nature'
+                if j == 'Sci': j='Science'
                 print(' ', end='')
                 print(h.unescape(j), end=': ')
                 print("\033[1;30;48m%s\033[0m" % E)
@@ -634,7 +646,7 @@ if __name__ == '__main__':
     h = HTMLParser()
     print("\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 3.1 \033[0m")
     print("User experience is optimized with iTerm2")
-    print("Latest update on Nov-5-2017")
+    print("Latest update on Nov-6-2017")
     print("Type h(elp) for instructions.")
     print()
     orderlist = list()
