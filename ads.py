@@ -17,7 +17,7 @@ def get_content(url):
     return content
 
 
-def scrap_a(fauthor, author_list, year):
+def scrap_a(fauthor, author_list, year, exact='NO'):
     if fauthor.find(',') == -1 and fauthor.find(' ') >= 0:
         spl_lst = fauthor.split(' ')
         while True:
@@ -50,20 +50,29 @@ def scrap_a(fauthor, author_list, year):
             temp = temp.replace(',', '%2C')
             author_list[i] = '%0D%0A' + temp
     author = faut + ''.join(author_list)
-    
     input_author = copy.deepcopy(author)
     input_author = input_author.replace('%5E', '')
     input_author = input_author.replace('%0D%0A', '; ')
     input_author = input_author.replace('%2C+', ', ')
+    input_author = input_author.replace('+', ' ')
     input_author = input_author.replace('%2C', ', ')
     input_author = input_author.split('; ')
     if input_author[0] == '':
         input_author = input_author[1:]
+    for idx, a in enumerate(input_author):
+        ap = a.split(' ')
+        while True:
+            try:
+                ap.remove('')
+            except ValueError:
+                break
+        input_author[idx] = ' '.join(ap)
+
     url = 'http://adsabs.harvard.edu/cgi-bin/nph-abs_connect?db_key=AST&db_key=PRE&qform=AST&arxiv_sel' \
           '=astro-ph&arxiv_sel=cond-mat&arxiv_sel=cs&arxiv_sel=gr-qc&arxiv_sel=hep-ex&arxiv_sel=hep-lat' \
           '&arxiv_sel=hep-ph&arxiv_sel=hep-th&arxiv_sel=math&arxiv_sel=math-ph&arxiv_sel=nlin&arxiv_sel' \
           '=nucl-ex&arxiv_sel=nucl-th&arxiv_sel=physics&arxiv_sel=quant-ph&arxiv_sel=q-bio&sim_query=YES' \
-          '&ned_query=YES&adsobj_query=YES&aut_logic=AND&obj_logic=OR' \
+          '&ned_query=YES&adsobj_query=YES&aut_xct=%s&aut_logic=AND&obj_logic=OR' \
           '&author=%s' \
           '&object=&start_mon=&start_year=%s&end_mon=&end_year=%s' \
           '&ttl_logic=OR&title=&txt_logic=OR&text=&nr_to_return=200&start_nr=1&jou_pick=ALL&ref_stems=&data_and=ALL' \
@@ -71,22 +80,27 @@ def scrap_a(fauthor, author_list, year):
           '&end_entry_mon=&end_entry_year=&min_score=' \
           '&sort=CITATIONS&data_type=%s&aut_syn=YES&ttl_syn=YES&txt_syn=YES' \
           '&aut_wt=1.0&obj_wt=1.0&ttl_wt=0.3&txt_wt=3.0&aut_wgt=YES&obj_wgt=YES' \
-          '&ttl_wgt=YES&txt_wgt=YES&ttl_sco=YES&txt_sco=YES&version=1' % (author, year[0], year[1], 'SHORT')
+          '&ttl_wgt=YES&txt_wgt=YES&ttl_sco=YES&txt_sco=YES&version=1' % (exact, author, year[0], year[1], 'SHORT')
+
     url_bib = 'http://adsabs.harvard.edu/cgi-bin/nph-abs_connect?db_key=AST&db_key=PRE&qform=AST&arxiv_sel' \
-          '=astro-ph&arxiv_sel=cond-mat&arxiv_sel=cs&arxiv_sel=gr-qc&arxiv_sel=hep-ex&arxiv_sel=hep-lat' \
-          '&arxiv_sel=hep-ph&arxiv_sel=hep-th&arxiv_sel=math&arxiv_sel=math-ph&arxiv_sel=nlin&arxiv_sel' \
-          '=nucl-ex&arxiv_sel=nucl-th&arxiv_sel=physics&arxiv_sel=quant-ph&arxiv_sel=q-bio&sim_query=YES' \
-          '&ned_query=YES&adsobj_query=YES&aut_logic=AND&obj_logic=OR' \
-          '&author=%s' \
-          '&object=&start_mon=&start_year=%s&end_mon=&end_year=%s' \
-          '&ttl_logic=OR&title=&txt_logic=OR&text=&nr_to_return=200&start_nr=1&jou_pick=ALL&ref_stems=&data_and=ALL' \
-          '&group_and=ALL&start_entry_day=&start_entry_mon=&start_entry_year=&end_entry_day=' \
-          '&end_entry_mon=&end_entry_year=&min_score=' \
-          '&sort=CITATIONS&data_type=%s&aut_syn=YES&ttl_syn=YES&txt_syn=YES' \
-          '&aut_wt=1.0&obj_wt=1.0&ttl_wt=0.3&txt_wt=3.0&aut_wgt=YES&obj_wgt=YES' \
-          '&ttl_wgt=YES&txt_wgt=YES&ttl_sco=YES&txt_sco=YES&version=1' % (author, year[0], year[1], 'BIBTEX')
+              '=astro-ph&arxiv_sel=cond-mat&arxiv_sel=cs&arxiv_sel=gr-qc&arxiv_sel=hep-ex&arxiv_sel=hep-lat' \
+              '&arxiv_sel=hep-ph&arxiv_sel=hep-th&arxiv_sel=math&arxiv_sel=math-ph&arxiv_sel=nlin&arxiv_sel' \
+              '=nucl-ex&arxiv_sel=nucl-th&arxiv_sel=physics&arxiv_sel=quant-ph&arxiv_sel=q-bio&sim_query=YES' \
+              '&ned_query=YES&adsobj_query=YES&aut_logic=AND&obj_logic=OR' \
+              '&author=%s' \
+              '&object=&start_mon=&start_year=%s&end_mon=&end_year=%s' \
+              '&ttl_logic=OR&title=&txt_logic=OR&text=&nr_to_return=200&start_nr=1&jou_pick=ALL&ref_stems=&data_and=ALL' \
+              '&group_and=ALL&start_entry_day=&start_entry_mon=&start_entry_year=&end_entry_day=' \
+              '&end_entry_mon=&end_entry_year=&min_score=' \
+              '&sort=CITATIONS&data_type=%s&aut_syn=YES&ttl_syn=YES&txt_syn=YES' \
+              '&aut_wt=1.0&obj_wt=1.0&ttl_wt=0.3&txt_wt=3.0&aut_wgt=YES&obj_wgt=YES' \
+              '&ttl_wgt=YES&txt_wgt=YES&ttl_sco=YES&txt_sco=YES&version=1' % (author, year[0], year[1], 'BIBTEX')
 
     tik = time.time()
+    if exact == 'YES':
+        print(' Exact name-match', end='')
+    else:
+        print(' Fuzzy name-match', end='')
     print(' loading...')
     p = Pool(processes=2)
     results = p.map(get_content, (url, url_bib))
@@ -101,6 +115,7 @@ def scrap_a(fauthor, author_list, year):
 
         pattern_bib = re.compile('(@[\w]*?{.*?}\n})', re.S)
         items_bib = re.findall(pattern_bib, content_bib)
+
     except:
         print('\033[0;31;48m Retrived no result \033[0m')
         return 1
@@ -147,7 +162,7 @@ def scrap_a(fauthor, author_list, year):
 
     if len(author_list) == 1 and fauthor == '':
         print("\033[0;33;48m H-index = %s \033[0m" % get_hindex())
-        if year==['1950', '2050']:
+        if year == ['1950', '2050']:
             response = inner_loop(False)
             if response == 0:
                 pass
@@ -518,6 +533,8 @@ def get_ainfo():
                 break
         return ' '.join(splited)
 
+    exact = 'NO'
+
     try:
         print("\033[0;34;48m Search by author and year:\033[0m")
         a_list = list()
@@ -535,6 +552,8 @@ def get_ainfo():
             if get == '\x1b[A':
                 a_list.pop()
                 continue
+            if get == '!':
+                exact = 'YES'
             try:
                 int(get[0])
                 year = get.split('-')
@@ -547,7 +566,8 @@ def get_ainfo():
             year *= 2
         if fauthor == '' and len(a_list) == 0:
             return 1
-        scrap_a(fauthor, a_list, year)
+        scrap_a(fauthor, a_list, year, exact)
+
     except:
         return 1
 
@@ -631,9 +651,14 @@ def standby(order):
                         year = [''.join(year)]
                         scrap_a(authors[0], authors[1:], year*2)
                     except:
+                        if prmt.find('!') >= 0:
+                            prmt = prmt.replace('!', '')
+                            exact = 'YES'
+                        else:
+                            exact = 'NO'
                         authors = prmt.split(';')
                         year = ['1950', '2050']
-                        scrap_a('', authors, year)
+                        scrap_a('', authors, year, exact)
 
         except:
             print('\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1])
