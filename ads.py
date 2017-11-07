@@ -117,6 +117,10 @@ def scrap_a(fauthor, author_list, year, exact='NO'):
     except:
         print('\033[0;31;48m Retrived no result \033[0m')
         return 1
+    try:
+        tot = int(re.findall(re.compile('Total citations: <strong>(\d*?)</strong>', re.S), content_range)[0])
+    except:
+        tot = 0
 
     pattern2 = re.compile('nowrap>(.*?)colspan=6', re.S)
     items = re.findall(pattern2, content_range)
@@ -160,6 +164,7 @@ def scrap_a(fauthor, author_list, year, exact='NO'):
 
     if len(author_list) == 1 and fauthor == '':
         print("\033[0;33;48m H-index = %s \033[0m" % get_hindex())
+        print("\033[0;33;48m Total Cit = %s \033[0m" % tot)
         if year == ['1950', '2050']:
             response = inner_loop(False)
             if response == 0:
@@ -168,7 +173,8 @@ def scrap_a(fauthor, author_list, year, exact='NO'):
                 return 1
         else:
             pass
-
+    else:
+        print("\033[0;33;48m Total Cit = %s \033[0m" % tot)
     print("\033[0;33;48m num\033[0m \033[0;31;48mcit\033[0m date")
 
     def check_exist(aut):
@@ -197,6 +203,13 @@ def scrap_a(fauthor, author_list, year, exact='NO'):
         if not elements:
             continue
         num, cit, mm, yyyy, files, authors, title = elements[0]
+        conum = 0
+        try:
+            pp = re.compile('<span style="color: red">and (\d*?) coauthors', re.S)
+            conum = int(re.findall(pp, _)[0])
+
+        except:
+            pass
         num = int(num)
         authors = authors.replace('&#160;', ' ')
         if idx > 0:
@@ -218,7 +231,7 @@ def scrap_a(fauthor, author_list, year, exact='NO'):
             else:
                 print("\033[0;34;48m%s\033[0m" % toprint, end='; ' if idx < len(author_split)-1 else '')
             if aut == '':
-                print("etc.", end='') if exist_print == 1 else print("\033[1;35;48metc.\033[0m", end='')
+                print("etc.(%d)" % conum, end='') if exist_print == 1 else print("\033[1;35;48metc.(%d)\033[0m" % conum, end='')
 
         print("\033[0;34;48m \033[0m")
         print("\033[0;32;48m %s \033[0m" % h.unescape(title))
