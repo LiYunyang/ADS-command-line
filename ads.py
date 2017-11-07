@@ -524,7 +524,7 @@ def get_ainfo():
         fauthor=''
         year = ['1950', '2050']
         while True:
-            get = raw_input('author \033[0;32;48m >>> \033[0m ')
+            get = raw_input(' author \033[0;32;48m >>> \033[0m ')
             orderlist.append(get)
             if get == '':
                 break
@@ -554,29 +554,34 @@ def get_ainfo():
 
 def get_jinfo():
         print("\033[0;34;48m Search by journal:\033[0m")
-        journal = raw_input("journal \033[0;32;48m >>> \033[0m ")
+        print(" hints: \033[1;35;48m ApJ\033[0m; \033[1;35;48m ApJS\033[0m; \033[1;35;48m MNRAS\033[0m; \033[1;35;48m A&A\033[0m; \033[1;35;48m ARA&A\033[0m; \033[1;35;48m Natur\033[0m;\033[1;35;48m NatAs\033[0m; \033[1;35;48m NatPh\033[0m; \033[1;35;48m Sci\033[0m; \033[1;35;48m PhRv(ABCDEFLMP)\033[0m; \033[1;35;48m A&ARv\033[0m; \033[1;35;48m RAA\033[0m")
+        journal = raw_input(" journal \033[0;32;48m >>> \033[0m ")
+        journal = journal.replace('&', '%26')
         orderlist.append(journal)
         if journal == 'exit'[:len(journal)] and len(journal) > 0:
             return 1
-        if journal == 'quit'[:len(journal)]:
+        if journal == 'quit'[:len(journal)] and len(journal) > 0:
             os._exit(0)
-        year = raw_input("year \033[0;32;48m >>> \033[0m")
+
+        year = raw_input(" year \033[0;32;48m >>> \033[0m")
         orderlist.append(year)
-        if year == 'exit'[:len(year)] and len(year)>0:
+        if year == 'exit'[:len(year)] and len(year) > 0:
             return 1
-        if year == 'quit'[:len(year)]:
+        if year == 'quit'[:len(year)] and len(year) > 0:
             os._exit(0)
-        volume = raw_input('volume \033[0;32;48m >>> \033[0m ')
+
+        volume = raw_input(' volume \033[0;32;48m >>> \033[0m ')
         orderlist.append(volume)
         if volume == 'exit'[:len(volume)]  and len(volume) > 0:
             return 1
-        elif volume == 'quit'[:len(volume)]:
+        if volume == 'quit'[:len(volume)] and len(volume) > 0:
             os._exit(0)
-        page = raw_input('page \033[0;32;48m >>> \033[0m ')
+
+        page = raw_input(' page \033[0;32;48m >>> \033[0m ')
         orderlist.append(page)
         if page == 'exit'[:len(page)] and len(page) > 0:
             return 1
-        if page == 'quit'[:len(page)]:
+        if page == 'quit'[:len(page)] and len(page) > 0:
             os._exit(0)
         scrap_j(journal, year, volume, page)
 
