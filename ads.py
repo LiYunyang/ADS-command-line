@@ -1,6 +1,6 @@
 from __future__ import print_function
 import re
-import urllib2
+import urllib
 import time
 import sys
 from multiprocessing import Pool
@@ -10,15 +10,15 @@ from html.parser import HTMLParser
 import unicodedata
 import os
 
+
 def get_content(url):
-    request = urllib2.Request(url)
-    response = urllib2.urlopen(request)
+    response = urllib.urlopen(url)
     content = response.read()
     return content
 
 
-def scrap_a(fauthor, author_list, year, exact='NO'):
-    if fauthor.find(',') == -1 and fauthor.find(' ') >= 0:
+def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
+    if fauthor.find(',') == -1 and fauthor.find(' ') >= 0 and direct is False:
         spl_lst = fauthor.split(' ')
         while True:
             try:
@@ -67,6 +67,8 @@ def scrap_a(fauthor, author_list, year, exact='NO'):
             except ValueError:
                 break
         input_author[idx] = ' '.join(ap)
+    
+    print(*input_author)
     url = 'http://adsabs.harvard.edu/cgi-bin/nph-abs_connect?db_key=AST&db_key=PRE&qform=AST&arxiv_sel' \
           '=astro-ph&arxiv_sel=cond-mat&arxiv_sel=cs&arxiv_sel=gr-qc&arxiv_sel=hep-ex&arxiv_sel=hep-lat' \
           '&arxiv_sel=hep-ph&arxiv_sel=hep-th&arxiv_sel=math&arxiv_sel=math-ph&arxiv_sel=nlin&arxiv_sel' \
@@ -182,11 +184,12 @@ def scrap_a(fauthor, author_list, year, exact='NO'):
             inp_aut_c = inp_aut.title()
             inp_aut_c = unicodedata.normalize('NFKD', h.unescape(unicode(inp_aut_c, 'utf-8'))).encode('ASCII', 'ignore')
             aut = unicodedata.normalize('NFKD', h.unescape(unicode(aut,'utf-8'))).encode('ASCII', 'ignore')
-            if aut[:len(inp_aut)] == inp_aut_c:
-                idx = aut.find(',')
-                if idx > -1:
-                    if aut[:idx] == inp_aut_c[:idx]:
-                        return 1
+            
+            if aut[:len(inp_aut)] == inp_aut_c or aut[:len(inp_aut)] == inp_aut:
+                # idx = aut.find(',')
+                # if idx > -1:
+                    # if aut[:idx] == inp_aut_c[:idx]:
+                return 1
             else:
                 try:
                     idx = aut.find(',')
@@ -227,11 +230,14 @@ def scrap_a(fauthor, author_list, year, exact='NO'):
             if check_exist(aut):
                 print("\033[1;35;48m%s\033[0m" % toprint, end='; ' if idx < len(author_split)-1 else '')
                 if idx < len(author_split)-1:
-                    exist_print = 1
+                    exist_print += 1
             else:
                 print("\033[0;34;48m%s\033[0m" % toprint, end='; ' if idx < len(author_split)-1 else '')
             if aut == '':
-                print("etc.(%d)" % conum, end='') if exist_print == 1 else print("\033[1;35;48metc.(%d)\033[0m" % conum, end='')
+                if exist_print == len(input_author):
+                    print("etc.(%d)" % conum, end='')
+                else:
+                    print("\033[1;35;48metc.\033[0m(\033[1;35;48m%d\033[0m/%d)" % (len(input_author)-exist_print, conum), end='')
 
         print("\033[0;34;48m \033[0m")
         print("\033[0;32;48m %s \033[0m" % h.unescape(title))
@@ -645,23 +651,23 @@ def standby(order):
                     try:
                         p = re.compile('(.*?)\(?(\d{4})\)?', re.S)
                         prmt, year = re.findall(p, prmt)[0]
-                        prmt = prmt.replace('etal', ' ')
-                        prmt = prmt.replace('et al.,', ' ')
-                        prmt = prmt.replace('et al.', ' ')
-                        prmt = prmt.replace('et al,', ' ')
-                        prmt = prmt.replace('et al', ' ')
+                        prmt = prmt.replace('etal', '')
+                        prmt = prmt.replace('et al.,', '')
+                        prmt = prmt.replace('et al.', '')
+                        prmt = prmt.replace('et al,', '')
+                        prmt = prmt.replace('et al', '')
 
-                        prmt = prmt.replace('&', ' ')
-                        prmt = prmt.replace(' and ', ' ')
-                        prmt = prmt.replace(',', ' ')
-                        authors = prmt.split(' ')
+                        prmt = prmt.replace('&', ';')
+                        prmt = prmt.replace(' and ', ';')
+                        prmt = prmt.replace(',', ';')
+                        authors = prmt.split(';')
                         while True:
                             try:
                                 authors.remove('')
                             except ValueError:
                                 break
                         year = [''.join(year)]
-                        scrap_a(authors[0], authors[1:], year*2)
+                        scrap_a(authors[0], authors[1:], year*2, direct=True)
                     except:
                         if prmt.find('!') >= 0:
                             prmt = prmt.replace('!', '')
