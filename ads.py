@@ -1,3 +1,5 @@
+#!~/anaconda2/bin/python
+# coding: utf-8
 from __future__ import print_function
 import re
 import urllib
@@ -68,7 +70,7 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
                 break
         input_author[idx] = ' '.join(ap)
     
-    print(*input_author)
+    
     url = 'http://adsabs.harvard.edu/cgi-bin/nph-abs_connect?db_key=AST&db_key=PRE&qform=AST&arxiv_sel' \
           '=astro-ph&arxiv_sel=cond-mat&arxiv_sel=cs&arxiv_sel=gr-qc&arxiv_sel=hep-ex&arxiv_sel=hep-lat' \
           '&arxiv_sel=hep-ph&arxiv_sel=hep-th&arxiv_sel=math&arxiv_sel=math-ph&arxiv_sel=nlin&arxiv_sel' \
@@ -99,9 +101,14 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
 
     tik = time.time()
     if exact == 'YES':
-        print(' Exact name-match', end='')
+        print('\033[1;35;48m Exactly \033[0m matching author', end='')
     else:
-        print(' Fuzzy name-match', end='')
+        print('\033[1;32;48m Fuzzily \033[0m matching author', end='')
+    if len(input_author)>1:
+        print('s: ', end='')
+    else:
+        print(': ', end='')
+    print(*input_author, sep='; ')
     print(' loading...')
     p = Pool(processes=2)
     results = p.map(get_content, (url, url_bib))
@@ -692,9 +699,9 @@ def help():
 
 if __name__ == '__main__':
     h = HTMLParser()
-    print("\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 3.1 \033[0m")
+    print("\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 3.2 \033[0m")
     print("User experience is optimized with iTerm2")
-    print("Latest update on Nov-6-2017")
+    print("Latest update on Nov-16-2017")
     print("Type h(elp) for instructions.")
     print()
     orderlist = list()
