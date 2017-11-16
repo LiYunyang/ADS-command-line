@@ -1,6 +1,22 @@
 # ADS-command-line
 An interactive command line tool desigened for [Astronomical Data System](http://www.adsabs.harvard.edu) for macOS.
 
+## Installation
+```
+python ads.py
+pyInstaller -F ads.py
+cp dist/ads /bin/
+```
+when the installation is done, lauch it with
+`
+ads
+`
+or use
+`
+ads Name-of-the-author(s) (year)
+`
+for a quick search.
+
 ## System requirement
 Python2 (and packages including re, urlib2, multiprocessing and pyperclip), [iTerm2](http://www.iterm2.com) (Best operating environment to enable terminal-based url request)
 
