@@ -1,4 +1,4 @@
-# -*- mode: python -*-
+# -*- mode: python2 -*-
 
 block_cipher = None
 

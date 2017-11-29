@@ -1,4 +1,3 @@
-#!~/anaconda2/bin/python
 # coding: utf-8
 from __future__ import print_function
 import re
@@ -8,7 +7,7 @@ import sys
 from multiprocessing import Pool
 import pyperclip
 import copy
-from html.parser import HTMLParser
+from HTMLParser import HTMLParser
 import unicodedata
 import os
 
@@ -69,6 +68,10 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
             except ValueError:
                 break
         input_author[idx] = ' '.join(ap)
+        input_author[idx] = input_author[idx].replace(' ', '')
+        input_author[idx] = input_author[idx].replace(',', ', ')
+        if input_author[idx][-1]==',':
+            input_author[idx]=input_author[idx][:-1]
     
     
     url = 'http://adsabs.harvard.edu/cgi-bin/nph-abs_connect?db_key=AST&db_key=PRE&qform=AST&arxiv_sel' \
@@ -101,16 +104,15 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
 
     tik = time.time()
     if exact == 'YES':
-        print('\033[1;35;48m Exactly \033[0m matching author', end='')
+        print('\033[1;35;48m Exactly\033[0m looking for:', end=' ')
     else:
-        print('\033[1;32;48m Fuzzily \033[0m matching author', end='')
+        print('\033[1;32;48m Fuzzily\033[0m looking for:', end=' ')
     if len(input_author)>1:
-        print('s: ', end='')
-    else:
-        print(': ', end='')
-    print(*input_author, sep='; ')
+        print(*input_author[:-1], sep='; ', end=' and ')
+    print(*input_author[-1:], sep='')
     print(' loading...')
     p = Pool(processes=2)
+
     results = p.map(get_content, (url, url_bib))
     p.close()
     p.join()
@@ -139,7 +141,7 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
     def inner_loop(p):
         if p is True:
             print(' %d entries in total'%len(items))
-        order = raw_input(' continue? \033[0;32;48m >>> \033[0m')
+        order = raw_input(' continue\033[0;32;48m >>> \033[0m')
         orderlist.append(order)
         try:
             idx = int(order)
@@ -174,7 +176,7 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
     if len(author_list) == 1 and fauthor == '':
         print("\033[0;33;48m H-index = %s \033[0m" % get_hindex())
         print("\033[0;33;48m Total Cit = %s \033[0m" % tot)
-        if year == ['1950', '2050']:
+        if year == ['1900', '2100']:
             response = inner_loop(False)
             if response == 0:
                 pass
@@ -193,9 +195,6 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
             aut = unicodedata.normalize('NFKD', h.unescape(unicode(aut,'utf-8'))).encode('ASCII', 'ignore')
             
             if aut[:len(inp_aut)] == inp_aut_c or aut[:len(inp_aut)] == inp_aut:
-                # idx = aut.find(',')
-                # if idx > -1:
-                    # if aut[:idx] == inp_aut_c[:idx]:
                 return 1
             else:
                 try:
@@ -255,9 +254,9 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
             F = ele[0]
             F = F.replace('&#160;', ' ')
             F = F.replace('#38', 'amp')
-            pj = re.compile('\d\d\d\d(.*?)\.', re.S)
+            F = F.replace('%26', '&')
+            pj = re.compile('\d\d\d\d(.*?)(?:\.|\d)', re.S)
             j = re.findall(pj, F)[0]
-            j = j.replace('%26', '&')
             if j == 'Natur': j='Nature'
             if j == 'Sci': j='Science'
             print(' ', end='')
@@ -271,9 +270,9 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
                 E = ele[0]
                 E = E.replace('&#160;', ' ')
                 E = E.replace('#38', 'amp')
-                pj = re.compile('\d\d\d\d(.*?)\.', re.S)
+                E = E.replace('%26', '&')
+                pj = re.compile('\d\d\d\d(.*?)(?:\.|\d)', re.S)
                 j = re.findall(pj, E)[0]
-                j = j.replace('%26', '&')
                 if j == 'Natur': j='Nature'
                 if j == 'Sci': j='Science'
                 print(' ', end='')
@@ -362,7 +361,7 @@ def scrap_j(journal, year, volume, page):
     def inner_loop(p):
         if p is True:
             print(' %d entries in total' % len(items))
-        order = raw_input(' continue? \033[0;32;48m >>> \033[0m')
+        order = raw_input(' continue\033[0;32;48m >>> \033[0m')
         orderlist.append(order)
         try:
             idx = int(order)
@@ -429,9 +428,9 @@ def scrap_j(journal, year, volume, page):
             F = ele[0]
             F = F.replace('&#160;', ' ')
             F = F.replace('#38', 'amp')
-            pj = re.compile('\d\d\d\d(.*?)\.', re.S)
+            F = F.replace('%26', '&')
+            pj = re.compile('\d\d\d\d(.*?)(?:\.|\d)', re.S)
             j = re.findall(pj, F)[0]
-            j = j.replace('%26', '&')
             if j == 'Natur': j='Nature'
             if j == 'Sci': j='Science'
             print(' ', end='')
@@ -445,9 +444,9 @@ def scrap_j(journal, year, volume, page):
                 E = ele[0]
                 E = E.replace('&#160;', ' ')
                 E = E.replace('#38', 'amp')
-                pj = re.compile('\d\d\d\d(.*?)\.', re.S)
+                E = E.replace('%26', '&')
+                pj = re.compile('\d\d\d\d(.*?)(?:\.|\d)', re.S)
                 j = re.findall(pj, E)[0]
-                j = j.replace('%26', '&')
                 if j == 'Natur': j='Nature'
                 if j == 'Sci': j='Science'
                 print(' ', end='')
@@ -523,7 +522,7 @@ def scrap_arxiv(id):
         scrap_a(fauthor, authors, year)
 
     def inner_loop():
-        order = raw_input(' continue? \033[0;32;48m >>> \033[0m')
+        order = raw_input(' continue\033[0;32;48m >>> \033[0m')
         orderlist.append(order)
         if order == '':
             return 0
@@ -563,10 +562,13 @@ def get_ainfo():
         print("\033[0;34;48m Search by author and year:\033[0m")
         a_list = list()
         fauthor=''
-        year = ['1950', '2050']
+        year = ['1900', '2100']
         while True:
             get = raw_input(' author \033[0;32;48m >>> \033[0m ')
             orderlist.append(get)
+            if get.find('!') >= 0:
+                get = get.replace('!', '')
+                exact = 'YES'
             if get == '':
                 break
             if get == 'exit'[:len(get)]:
@@ -576,8 +578,6 @@ def get_ainfo():
             if get == '\x1b[A':
                 a_list.pop()
                 continue
-            if get.find('!') >= 0:
-                exact = 'YES'
             else:
                 try:
                     int(get[0])
@@ -676,14 +676,16 @@ def standby(order):
                         year = [''.join(year)]
                         scrap_a(authors[0], authors[1:], year*2, direct=True)
                     except:
+
                         if prmt.find('!') >= 0:
                             prmt = prmt.replace('!', '')
                             exact = 'YES'
                         else:
                             exact = 'NO'
                         authors = prmt.split(';')
-                        year = ['1950', '2050']
+                        year = ['1900', '2100']
                         scrap_a('', authors, year, exact)
+
 
         except:
             print('\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1])
@@ -700,9 +702,9 @@ def help():
 if __name__ == '__main__':
     h = HTMLParser()
     print("\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 3.2 \033[0m")
-    print("User experience is optimized with iTerm2")
-    print("Latest update on Nov-16-2017")
-    print("Type h(elp) for instructions.")
+    # print(" User experience is optimized with iTerm2")
+    print(" Latest update on Nov-18-2017")
+    print(" Type h(elp) for instructions.")
     print()
     orderlist = list()
     if len(sys.argv) == 1:
