@@ -37,7 +37,7 @@ The software allows three modes of searching.
    type `j(ournal)` to enter this search mode.
    Type the abbreviations of the journal, year, volume and pages as indiated. Either of the term can be omitted.
 
-add `!` anywhere in the name will force a exact name-matching.
+add `!` anywhere in the name will force an exact name-matching.
 ## Search output
 The results of the search is list in a citation-descending order. 
 
