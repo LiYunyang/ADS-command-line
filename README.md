@@ -32,7 +32,7 @@ The software allows three modes of searching.
    Use the coventional ^ before the first author, the form of the author goes as Last; Last, First; or Last, F. The search is case insensitive.
    
    The year is **required**. Can be a single year as 2017 or two years concatenated by '-' for a search within the range.
-3. Publication based
+3. Journal based
 ![img](https://github.com/LiYunyang/ADS-command-line/blob/master/jmode.png)
    type j(ournal) to enter this search mode.
    Type the abbreviations of the journal, year, volume and pages as indiated. Either of the term can be omitted.
