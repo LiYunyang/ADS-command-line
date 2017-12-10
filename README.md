@@ -28,15 +28,16 @@ The software allows three modes of searching.
    arXiv ID based search is also supported in this mode.
 2. Author-year based
     ![img](https://github.com/LiYunyang/ADS-command-line/blob/master/amod.png)
-   type a(uthor) to enter this search mode. 
-   Use the coventional ^ before the first author, the form of the author goes as Last; Last, First; or Last, F. The search is case insensitive.
+   type `a(uthor)` to enter this search mode. 
+   Use the coventional `^` before the first author, the form of the author goes as Last; Last, First; or Last, F. The search is case insensitive.
    
    The year is **required**. Can be a single year as 2017 or two years concatenated by '-' for a search within the range.
 3. Journal based
 ![img](https://github.com/LiYunyang/ADS-command-line/blob/master/jmode.png)
-   type j(ournal) to enter this search mode.
+   type `j(ournal)` to enter this search mode.
    Type the abbreviations of the journal, year, volume and pages as indiated. Either of the term can be omitted.
-   
+
+add `!` anywhere in the name will force a exact name-matching.
 ## Search output
 The results of the search is list in a citation-descending order. 
 
@@ -45,4 +46,4 @@ The link to the article, if available, is given in the gray url with the name of
 Click the url lind to acess to the PDF version of the article.
 
 ## Ciation
-type the **num** to get the bibTeX ciation, which is copied to the clipboard, by default.
+type the `num` to get the bibTeX ciation, which is copied to the clipboard, by default.
