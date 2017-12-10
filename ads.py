@@ -140,7 +140,7 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
 
     def inner_loop(p):
         if p is True:
-            print(' %d entries in total'%len(items))
+            print(' %d'%len(items), end=',')
         order = raw_input(' continue\033[0;32;48m >>> \033[0m')
         orderlist.append(order)
         try:
@@ -222,7 +222,8 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
         num = int(num)
         authors = authors.replace('&#160;', ' ')
         if idx > 0:
-            print()
+            # print()
+            pass
         print("\033[0;33;48m  %s \033[0m" % num, end='')
         print("\033[0;31;48m  %s \033[0m" % cit, end='')
         print("%s-%s" % (yyyy, mm))
@@ -281,7 +282,7 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
 
             except:
                 try:
-                    pf = re.compile('arXiv(\d\d\d\d)(\d*).*?type=PREPRINT', re.S)
+                    pf = re.compile('arXiv(\d\d\d\d)\.*(\d*).*?type=PREPRINT', re.S)
                     ele = re.findall(pf, files)
                     a, b = ele[0]
                     X = "https://arxiv.org/pdf/%s.%s.pdf" % (a, b)
@@ -360,7 +361,7 @@ def scrap_j(journal, year, volume, page):
 
     def inner_loop(p):
         if p is True:
-            print(' %d entries in total' % len(items))
+            print(' %d' % len(items), end=',')
         order = raw_input(' continue\033[0;32;48m >>> \033[0m')
         orderlist.append(order)
         try:
@@ -408,7 +409,8 @@ def scrap_j(journal, year, volume, page):
         num = int(num)
         authors = authors.replace('&#160;', ' ')
         if idx > 0:
-            print()
+            # print()
+            pass
         print("\033[0;33;48m %s \033[0m" % num, ' %s-%s' % (yyyy, mm))
         author_split = authors.split('; ')
 
@@ -659,6 +661,8 @@ def standby(order):
                         p = re.compile('(.*?)\(?(\d{4})\)?', re.S)
                         prmt, year = re.findall(p, prmt)[0]
                         prmt = prmt.replace('etal', '')
+                        prmt = prmt.replace('et.al.', '')
+                        prmt = prmt.replace('et. al.', '')
                         prmt = prmt.replace('et al.,', '')
                         prmt = prmt.replace('et al.', '')
                         prmt = prmt.replace('et al,', '')
@@ -701,11 +705,11 @@ def help():
 
 if __name__ == '__main__':
     h = HTMLParser()
-    print("\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 3.2 \033[0m")
+    # print("\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 3.2 \033[0m")
     # print(" User experience is optimized with iTerm2")
-    print(" Latest update on Nov-18-2017")
-    print(" Type h(elp) for instructions.")
-    print()
+    # print(" Latest update on Nov-18-2017")
+    # print(" Type h(elp) for instructions.")
+    os.system('imgcat ~/Documents/Work/ADS/ads_logo_left.png')
     orderlist = list()
     if len(sys.argv) == 1:
         standby(raw_input("\033[0;32;48m >>> \033[0m"))
