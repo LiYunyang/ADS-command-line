@@ -10,6 +10,13 @@ import copy
 from HTMLParser import HTMLParser
 import unicodedata
 import os
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import host_subplot
+import numpy as np
+import time
+
 
 
 def get_content(url):
@@ -140,7 +147,7 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
 
     def inner_loop(p):
         if p is True:
-            print(' %d'%len(items), end=',')
+            print(' %d' % len(items), end=',')
         order = raw_input(' continue\033[0;32;48m >>> \033[0m')
         orderlist.append(order)
         try:
@@ -153,6 +160,9 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
                 return 0
             elif order == 'url'[:len(order)]:
                 print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m" % url)
+                return inner_loop(False)
+            elif order == 'stat'[:len(order)]:
+                plot_statistic()
                 return inner_loop(False)
             elif order == 'exit'[:len(order)] or order == '^[':
                 return 1
@@ -172,6 +182,135 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
             if int(num) > int(cit):
                 return int(num)-1
         return '> %d' % (int(num))
+
+    def plot_statistic():
+
+        year_list = []
+        cite_list = []
+        nsph_list = []
+        ns_list = []
+        for idx, _ in enumerate(items):
+            p = re.compile('(\d*?)</td><td.*?"baseline">(\d*?)\.000.*?"baseline">(\d\d)/(\d{4})(.*?)width="25%">(.*?)<.*?colspan=3>(.*?)<',re.S)
+            elements = re.findall(p, _)
+            if not elements:
+                continue
+            num, cit, mm, yyyy, files, authors, title = elements[0]
+
+            try:
+                pf = re.compile('href="([^"]*?type=ARTICLE)"', re.S)
+                ele = re.findall(pf, files)
+                F = ele[0]
+                F = F.replace('&#160;', ' ')
+                F = F.replace('#38', 'amp')
+                F = F.replace('%26', '&')
+                pj = re.compile('\d\d\d\d(.*?)(?:\.|\d)', re.S)
+                j = re.findall(pj, F)[0]
+                if j == 'Natur' or j == 'Sci' or j == 'ARA&A':
+                    nsph_list.append(int(yyyy))
+                    ns_list.append(int(yyyy))
+                if j[0:4] == 'PhRv':
+                    nsph_list.append(int(yyyy))
+                year_list.append(int(yyyy))
+                cite_list.append(int(cit))
+            except:
+                try:
+                    pf = re.compile('href="([^"]*?type=EJOURNAL)"', re.S)
+                    ele = re.findall(pf, files)
+                    F = ele[0]
+                    F = F.replace('&#160;', ' ')
+                    F = F.replace('#38', 'amp')
+                    F = F.replace('%26', '&')
+                    pj = re.compile('\d\d\d\d(.*?)(?:\.|\d)', re.S)
+                    j = re.findall(pj, F)[0]
+                    if j == 'Natur' or j == 'Sci' or j == 'ARA&A':
+                        nsph_list.append(int(yyyy))
+                        ns_list.append(int(yyyy))
+                    if j[0:4] == 'PhRv':
+                        nsph_list.append(int(yyyy))
+                    year_list.append(int(yyyy))
+                    cite_list.append(int(cit))
+                except:
+                    try:
+                        pf = re.compile('arXiv(\d\d\d\d)\.*(\d*).*?type=PREPRINT', re.S)
+                        ele = re.findall(pf, files)
+                        if ele[0]:
+                            year_list.append(int(yyyy))
+                            cite_list.append(int(cit))
+                    except:
+                        pass
+
+
+        year_list = np.array(year_list)
+        cite_list = np.array(cite_list)
+        idx = np.argsort(year_list)
+        year_list = year_list[idx]
+        cite_list = cite_list[idx]
+
+        minyear = year_list[0]
+        maxyear = year_list[-1]
+        year_sq = np.arange(minyear, maxyear+1)
+        cit_sq = np.zeros(len(year_sq))
+        num_sq = np.zeros(len(year_sq))
+        for idx, y in enumerate(year_list):
+            cit_sq[y-minyear] += cite_list[idx]
+            num_sq[y-minyear] += 1
+        plt.figure(figsize=(30, 9))
+        num_plot = host_subplot(111)
+        cit_plot = num_plot.twinx()
+        avg_cit = np.array([cit_sq[idx]/num_sq[idx] if num_sq[idx] > 0 else 0 for idx in np.arange(len(num_sq))])
+        cit_plot.plot(year_sq, avg_cit, color='orange', lw=3)
+        cit_plot.scatter(year_sq, avg_cit, color='orange', s=60)
+        idx = np.argmax(avg_cit)
+        _ = avg_cit[idx]
+        cit_plot.scatter(year_sq[idx], _, s=100, color='orange')
+        cit_plot.text(x=year_sq[idx], y=_*1.05, s='%d' % _, color='white', va='bottom', fontsize=20, ha='center')
+        ab = num_plot.hist(year_list, bins=maxyear-minyear+1, range=(minyear-(1./2), maxyear+1./2), color=(45./255, 120./255, 225./255))
+        num_plot.hist(nsph_list, bins=maxyear - minyear + 1, range=(minyear - (1./2), maxyear + 1./2), color='yellow')
+        num_plot.hist(ns_list, bins=maxyear - minyear + 1, range=(minyear - (1./2), maxyear + 1./2), color='green')
+        a = ab[0]
+        b = ab[1]
+        idx = np.argmax(a)
+        _ = a[idx]
+        num_plot.text(x=(b[idx]+b[idx+1])/2, y=_*1.05, s='%d' % _, color='white', fontsize=20, ha='center')
+        font = {'color': 'white', 'size': 20}
+
+        num_plot.set_ylim(0, )
+        cit_plot.set_ylim(0, )
+
+        if max(avg_cit) > 800:
+            cit_plot.set_yticks([100, 200, 500])
+            cit_plot.set_yticklabels([100, 200, 500], fontdict={'color': 'orange', 'size': 20})
+        else:
+            cit_plot.set_yticks([10, 50, 100, 200])
+            cit_plot.set_yticklabels([10, 50, 100, 200], fontdict={'color': 'orange', 'size': 20})
+
+        num_plot.set_yticks([5, 10])
+        num_plot.set_yticklabels([5, 10], fontdict={'color': (45./255, 120./255, 225./255), 'size': 20})
+        thisyear = int(time.localtime().tm_year)
+        yearticks = list(np.arange(1950, thisyear, 10))
+        if thisyear % 10 > 0:
+            yearticks.append(thisyear)
+        if year_list[0] % 10 > 0:
+            yearticks.append(year_list[0])
+        num_plot.set_xticks(yearticks)
+        num_plot.set_xticklabels(yearticks, fontdict=font)
+        plt.xlim(year_list[0]-0.5, thisyear+0.5)
+        num_plot.spines['top'].set_color('none')
+        num_plot.spines['bottom'].set_color('none')
+        num_plot.spines['left'].set_color('none')
+        num_plot.spines['right'].set_color('none')
+
+        cit_plot.spines['top'].set_color('none')
+        cit_plot.spines['bottom'].set_color('none')
+        cit_plot.spines['left'].set_color('none')
+        cit_plot.spines['right'].set_color('none')
+
+        # cit_plot.axis('off')
+        # num_plot.axis('off')
+        plt.savefig('/Users/liyunyang/Documents/Work/ADS/temp.eps', transparent=True)
+        os.system('imgcat ~/Documents/Work/ADS/temp.eps')
+        if os.path.exists('~/Documents/Work/ADS/temp.eps') is True:
+            os.system('rm ~/Documents/Work/ADS/temp.eps')
 
     if len(author_list) == 1 and fauthor == '':
         print("\033[0;33;48m H-index = %s \033[0m" % get_hindex())
@@ -205,6 +344,7 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
                 except:
                     continue
         return 0
+
 
     for idx, _ in enumerate(items):
         p = re.compile('(\d*?)</td><td.*?"baseline">(\d*?)\.000.*?"baseline">(\d\d)/(\d{4})(.*?)width="25%">(.*?)<.*?colspan=3>(.*?)<', re.S)
@@ -240,6 +380,8 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
                     exist_print += 1
             else:
                 print("\033[0;34;48m%s\033[0m" % toprint, end='; ' if idx < len(author_split)-1 else '')
+            if exist_print > input_author:
+                exist_print = input_author
             if aut == '':
                 if exist_print == len(input_author):
                     print("etc.(%d)" % conum, end='')
