@@ -47,3 +47,7 @@ Click the url lind to acess to the PDF version of the article.
 
 ## Ciation
 type the `num` to get the bibTeX ciation, which is copied to the clipboard, by default.
+
+## Statistics
+Command `stat` plots the statistics of the author. With the blue bars showing the number of publicaions per year (green the Nature/Science/ARA&A paper and yellow the Physical Review papers) and the orange curve showing the average citations per paper per year.
+![img](https://github.com/LiYunyang/ADS-command-line/blob/master/statistics.png)
