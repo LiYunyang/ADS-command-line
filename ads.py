@@ -309,8 +309,8 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
         # num_plot.axis('off')
         plt.savefig('/Users/liyunyang/Documents/Work/ADS/temp.eps', transparent=True)
         os.system('imgcat ~/Documents/Work/ADS/temp.eps')
-        if os.path.exists('~/Documents/Work/ADS/temp.eps') is True:
-            os.system('rm ~/Documents/Work/ADS/temp.eps')
+        if os.path.exists('/Users/liyunyang/Documents/Work/ADS/temp.eps') is True:
+            os.system('rm /Users/liyunyang/Documents/Work/ADS/temp.eps')
 
     if len(author_list) == 1 and fauthor == '':
         print("\033[0;33;48m H-index = %s \033[0m" % get_hindex())
@@ -380,8 +380,8 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
                     exist_print += 1
             else:
                 print("\033[0;34;48m%s\033[0m" % toprint, end='; ' if idx < len(author_split)-1 else '')
-            if exist_print > input_author:
-                exist_print = input_author
+            if exist_print > len(input_author):
+                exist_print = len(input_author)
             if aut == '':
                 if exist_print == len(input_author):
                     print("etc.(%d)" % conum, end='')
