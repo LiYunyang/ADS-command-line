@@ -15,8 +15,6 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import host_subplot
 import numpy as np
-import time
-
 
 
 def get_content(url):
@@ -39,7 +37,7 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
     if faut != '':
         faut = '%5E' + faut
     for i, aut in enumerate(author_list):
-        if (aut.find(',') == -1 and aut.find(' ') >= 0):
+        if aut.find(',') == -1 and aut.find(' ') >= 0:
             spl_lst = aut.split(' ')
             while True:
                 try:
@@ -77,10 +75,9 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
         input_author[idx] = ' '.join(ap)
         input_author[idx] = input_author[idx].replace(' ', '')
         input_author[idx] = input_author[idx].replace(',', ', ')
-        if input_author[idx][-1]==',':
-            input_author[idx]=input_author[idx][:-1]
-    
-    
+        if input_author[idx][-1] == ',':
+            input_author[idx] = input_author[idx][:-1]
+
     url = 'http://adsabs.harvard.edu/cgi-bin/nph-abs_connect?db_key=AST&db_key=PRE&qform=AST&arxiv_sel' \
           '=astro-ph&arxiv_sel=cond-mat&arxiv_sel=cs&arxiv_sel=gr-qc&arxiv_sel=hep-ex&arxiv_sel=hep-lat' \
           '&arxiv_sel=hep-ph&arxiv_sel=hep-th&arxiv_sel=math&arxiv_sel=math-ph&arxiv_sel=nlin&arxiv_sel' \
@@ -114,7 +111,7 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
         print('\033[1;35;48m Exactly\033[0m looking for:', end=' ')
     else:
         print('\033[1;32;48m Fuzzily\033[0m looking for:', end=' ')
-    if len(input_author)>1:
+    if len(input_author) > 1:
         print(*input_author[:-1], sep='; ', end=' and ')
     print(*input_author[-1:], sep='')
     print(' loading...')
@@ -239,7 +236,6 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
                     except:
                         pass
 
-
         year_list = np.array(year_list)
         cite_list = np.array(cite_list)
         idx = np.argsort(year_list)
@@ -264,7 +260,8 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
         _ = avg_cit[idx]
         cit_plot.scatter(year_sq[idx], _, s=100, color='orange')
         cit_plot.text(x=year_sq[idx], y=_*1.05, s='%d' % _, color='white', va='bottom', fontsize=20, ha='center')
-        ab = num_plot.hist(year_list, bins=maxyear-minyear+1, range=(minyear-(1./2), maxyear+1./2), color=(45./255, 120./255, 225./255))
+        ab = num_plot.hist(year_list, bins=maxyear-minyear+1, range=(minyear-(1./2), maxyear+1./2),
+                           color=(45./255, 120./255, 225./255))
         num_plot.hist(nsph_list, bins=maxyear - minyear + 1, range=(minyear - (1./2), maxyear + 1./2), color='yellow')
         num_plot.hist(ns_list, bins=maxyear - minyear + 1, range=(minyear - (1./2), maxyear + 1./2), color='green')
         a = ab[0]
@@ -305,8 +302,6 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
         cit_plot.spines['left'].set_color('none')
         cit_plot.spines['right'].set_color('none')
 
-        # cit_plot.axis('off')
-        # num_plot.axis('off')
         plt.savefig('/Users/liyunyang/Documents/Work/ADS/temp.eps', transparent=True)
         os.system('imgcat ~/Documents/Work/ADS/temp.eps')
         if os.path.exists('/Users/liyunyang/Documents/Work/ADS/temp.eps') is True:
@@ -345,7 +340,6 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
                     continue
         return 0
 
-
     for idx, _ in enumerate(items):
         p = re.compile('(\d*?)</td><td.*?"baseline">(\d*?)\.000.*?"baseline">(\d\d)/(\d{4})(.*?)width="25%">(.*?)<.*?colspan=3>(.*?)<', re.S)
         elements = re.findall(p, _)
@@ -362,7 +356,6 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
         num = int(num)
         authors = authors.replace('&#160;', ' ')
         if idx > 0:
-            # print()
             pass
         print("\033[0;33;48m  %s \033[0m" % num, end='')
         print("\033[0;31;48m  %s \033[0m" % cit, end='')
@@ -551,7 +544,6 @@ def scrap_j(journal, year, volume, page):
         num = int(num)
         authors = authors.replace('&#160;', ' ')
         if idx > 0:
-            # print()
             pass
         print("\033[0;33;48m %s \033[0m" % num, ' %s-%s' % (yyyy, mm))
         author_split = authors.split('; ')
@@ -575,8 +567,10 @@ def scrap_j(journal, year, volume, page):
             F = F.replace('%26', '&')
             pj = re.compile('\d\d\d\d(.*?)(?:\.|\d)', re.S)
             j = re.findall(pj, F)[0]
-            if j == 'Natur': j='Nature'
-            if j == 'Sci': j='Science'
+            if j == 'Natur':
+                j = 'Nature'
+            if j == 'Sci':
+                j = 'Science'
             print(' ', end='')
             print(h.unescape(j), end=': ')
             print("\033[1;30;48m%s\033[0m" % F)
@@ -591,8 +585,10 @@ def scrap_j(journal, year, volume, page):
                 E = E.replace('%26', '&')
                 pj = re.compile('\d\d\d\d(.*?)(?:\.|\d)', re.S)
                 j = re.findall(pj, E)[0]
-                if j == 'Natur': j='Nature'
-                if j == 'Sci': j='Science'
+                if j == 'Natur':
+                    j = 'Nature'
+                if j == 'Sci':
+                    j = 'Science'
                 print(' ', end='')
                 print(h.unescape(j), end=': ')
                 print("\033[1;30;48m%s\033[0m" % E)
@@ -821,8 +817,8 @@ def standby(order):
                                 break
                         year = [''.join(year)]
                         scrap_a(authors[0], authors[1:], year*2, direct=True)
-                    except:
 
+                    except:
                         if prmt.find('!') >= 0:
                             prmt = prmt.replace('!', '')
                             exact = 'YES'
@@ -831,7 +827,6 @@ def standby(order):
                         authors = prmt.split(';')
                         year = ['1900', '2100']
                         scrap_a('', authors, year, exact)
-
 
         except:
             print('\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1])
@@ -844,13 +839,8 @@ def help():
     print("Type j(ournal) for a publication specified search.")
     
 
-
 if __name__ == '__main__':
     h = HTMLParser()
-    # print("\033[0;31;48m This is the command line tool for SAO/NASA Astronomical Data System, version 3.2 \033[0m")
-    # print(" User experience is optimized with iTerm2")
-    # print(" Latest update on Nov-18-2017")
-    # print(" Type h(elp) for instructions.")
     os.system('imgcat ~/Documents/Work/ADS/ads_logo_left.png')
     orderlist = list()
     if len(sys.argv) == 1:
