@@ -15,6 +15,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import host_subplot
 import numpy as np
+from wordcloud import WordCloud
 
 
 def get_content(url):
@@ -85,7 +86,7 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
           '&ned_query=YES&adsobj_query=YES&aut_xct=%s&aut_logic=AND&obj_logic=OR' \
           '&author=%s' \
           '&object=&start_mon=&start_year=%s&end_mon=&end_year=%s' \
-          '&ttl_logic=OR&title=&txt_logic=OR&text=&nr_to_return=200&start_nr=1&jou_pick=ALL&ref_stems=&data_and=ALL' \
+          '&ttl_logic=OR&title=&txt_logic=OR&text=&nr_to_return=300&start_nr=1&jou_pick=ALL&ref_stems=&data_and=ALL' \
           '&group_and=ALL&start_entry_day=&start_entry_mon=&start_entry_year=&end_entry_day=' \
           '&end_entry_mon=&end_entry_year=&min_score=' \
           '&sort=CITATIONS&data_type=%s&aut_syn=YES&ttl_syn=YES&txt_syn=YES' \
@@ -99,7 +100,7 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
               '&ned_query=YES&adsobj_query=YES&aut_xct=%s&aut_logic=AND&obj_logic=OR' \
               '&author=%s' \
               '&object=&start_mon=&start_year=%s&end_mon=&end_year=%s' \
-              '&ttl_logic=OR&title=&txt_logic=OR&text=&nr_to_return=200&start_nr=1&jou_pick=ALL&ref_stems=&data_and=ALL' \
+              '&ttl_logic=OR&title=&txt_logic=OR&text=&nr_to_return=300&start_nr=1&jou_pick=ALL&ref_stems=&data_and=ALL' \
               '&group_and=ALL&start_entry_day=&start_entry_mon=&start_entry_year=&end_entry_day=' \
               '&end_entry_mon=&end_entry_year=&min_score=' \
               '&sort=CITATIONS&data_type=%s&aut_syn=YES&ttl_syn=YES&txt_syn=YES' \
@@ -142,6 +143,77 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
     tok = time.time()
     print(' retrieved in \033[0;31;48m %1.2f \033[0m sec' % (tok - tik))
 
+    year_list = []
+    cite_list = []
+    nsph_list = []
+    ns_list = []
+    title_list = []
+    for idx, _ in enumerate(items):
+        p = re.compile(
+            '(\d*?)</td><td.*?"baseline">(\d*?)\.000.*?"baseline">(\d\d)/(\d{4})(.*?)width="25%">(.*?)<.*?colspan=3>(.*?)<',
+            re.S)
+        elements = re.findall(p, _)
+        if not elements:
+            continue
+        num, cit, mm, yyyy, files, authors, title = elements[0]
+        title_list.append(h.unescape(title))
+        try:
+            pf = re.compile('href="([^"]*?type=ARTICLE)"', re.S)
+            ele = re.findall(pf, files)
+            F = ele[0]
+            F = F.replace('&#160;', ' ')
+            F = F.replace('#38', 'amp')
+            F = F.replace('%26', '&')
+            pj = re.compile('\d\d\d\d(.*?)(?:\.|\d)', re.S)
+            j = re.findall(pj, F)[0]
+            if j == 'Natur' or j == 'Sci' or j == 'ARA&A':
+                nsph_list.append(int(yyyy))
+                ns_list.append(int(yyyy))
+            if j[0:4] == 'PhRv':
+                nsph_list.append(int(yyyy))
+            year_list.append(int(yyyy))
+            cite_list.append(int(cit))
+        except:
+            try:
+                pf = re.compile('href="([^"]*?type=EJOURNAL)"', re.S)
+                ele = re.findall(pf, files)
+                F = ele[0]
+                F = F.replace('&#160;', ' ')
+                F = F.replace('#38', 'amp')
+                F = F.replace('%26', '&')
+                pj = re.compile('\d\d\d\d(.*?)(?:\.|\d)', re.S)
+                j = re.findall(pj, F)[0]
+                if j == 'Natur' or j == 'Sci' or j == 'ARA&A':
+                    nsph_list.append(int(yyyy))
+                    ns_list.append(int(yyyy))
+                if j[0:4] == 'PhRv':
+                    nsph_list.append(int(yyyy))
+                year_list.append(int(yyyy))
+                cite_list.append(int(cit))
+            except:
+                try:
+                    pf = re.compile('arXiv(\d\d\d\d)\.*(\d*).*?type=PREPRINT', re.S)
+                    ele = re.findall(pf, files)
+                    if ele[0]:
+                        year_list.append(int(yyyy))
+                        cite_list.append(int(cit))
+                except:
+                    pass
+    titletext = ' '.join(title_list)
+    year_list = np.array(year_list)
+    cite_list = np.array(cite_list)
+    idx = np.argsort(year_list)
+    year_list = year_list[idx]
+    cite_list = cite_list[idx]
+    minyear = year_list[0]
+    maxyear = year_list[-1]
+    year_sq = np.arange(minyear, maxyear + 1)
+    cit_sq = np.zeros(len(year_sq))
+    num_sq = np.zeros(len(year_sq))
+    for idx, y in enumerate(year_list):
+        cit_sq[y - minyear] += cite_list[idx]
+        num_sq[y - minyear] += 1
+
     def inner_loop(p):
         if p is True:
             print(' %d' % len(items), end=',')
@@ -160,6 +232,11 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
                 return inner_loop(False)
             elif order == 'stat'[:len(order)]:
                 plot_statistic()
+                return inner_loop(False)
+            elif order == 'res'[:len(order)]:
+                return 2
+            elif order == 'wc'[:len(order)]:
+                plot_wordcloud()
                 return inner_loop(False)
             elif order == 'exit'[:len(order)] or order == '^[':
                 return 1
@@ -181,75 +258,6 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
         return '> %d' % (int(num))
 
     def plot_statistic():
-
-        year_list = []
-        cite_list = []
-        nsph_list = []
-        ns_list = []
-        for idx, _ in enumerate(items):
-            p = re.compile('(\d*?)</td><td.*?"baseline">(\d*?)\.000.*?"baseline">(\d\d)/(\d{4})(.*?)width="25%">(.*?)<.*?colspan=3>(.*?)<',re.S)
-            elements = re.findall(p, _)
-            if not elements:
-                continue
-            num, cit, mm, yyyy, files, authors, title = elements[0]
-
-            try:
-                pf = re.compile('href="([^"]*?type=ARTICLE)"', re.S)
-                ele = re.findall(pf, files)
-                F = ele[0]
-                F = F.replace('&#160;', ' ')
-                F = F.replace('#38', 'amp')
-                F = F.replace('%26', '&')
-                pj = re.compile('\d\d\d\d(.*?)(?:\.|\d)', re.S)
-                j = re.findall(pj, F)[0]
-                if j == 'Natur' or j == 'Sci' or j == 'ARA&A':
-                    nsph_list.append(int(yyyy))
-                    ns_list.append(int(yyyy))
-                if j[0:4] == 'PhRv':
-                    nsph_list.append(int(yyyy))
-                year_list.append(int(yyyy))
-                cite_list.append(int(cit))
-            except:
-                try:
-                    pf = re.compile('href="([^"]*?type=EJOURNAL)"', re.S)
-                    ele = re.findall(pf, files)
-                    F = ele[0]
-                    F = F.replace('&#160;', ' ')
-                    F = F.replace('#38', 'amp')
-                    F = F.replace('%26', '&')
-                    pj = re.compile('\d\d\d\d(.*?)(?:\.|\d)', re.S)
-                    j = re.findall(pj, F)[0]
-                    if j == 'Natur' or j == 'Sci' or j == 'ARA&A':
-                        nsph_list.append(int(yyyy))
-                        ns_list.append(int(yyyy))
-                    if j[0:4] == 'PhRv':
-                        nsph_list.append(int(yyyy))
-                    year_list.append(int(yyyy))
-                    cite_list.append(int(cit))
-                except:
-                    try:
-                        pf = re.compile('arXiv(\d\d\d\d)\.*(\d*).*?type=PREPRINT', re.S)
-                        ele = re.findall(pf, files)
-                        if ele[0]:
-                            year_list.append(int(yyyy))
-                            cite_list.append(int(cit))
-                    except:
-                        pass
-
-        year_list = np.array(year_list)
-        cite_list = np.array(cite_list)
-        idx = np.argsort(year_list)
-        year_list = year_list[idx]
-        cite_list = cite_list[idx]
-
-        minyear = year_list[0]
-        maxyear = year_list[-1]
-        year_sq = np.arange(minyear, maxyear+1)
-        cit_sq = np.zeros(len(year_sq))
-        num_sq = np.zeros(len(year_sq))
-        for idx, y in enumerate(year_list):
-            cit_sq[y-minyear] += cite_list[idx]
-            num_sq[y-minyear] += 1
         plt.figure(figsize=(30, 9))
         num_plot = host_subplot(111)
         cit_plot = num_plot.twinx()
@@ -307,6 +315,17 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
         if os.path.exists('/Users/liyunyang/Documents/Work/ADS/temp.eps') is True:
             os.system('rm /Users/liyunyang/Documents/Work/ADS/temp.eps')
 
+    def plot_wordcloud():
+        wordcloud = WordCloud(width=1200, height=500, max_words=1500).generate(titletext)
+        plt.figure(figsize=(12, 5))
+        plt.imshow(wordcloud, interpolation='bilinear')
+        plt.axis("off")
+        plt.subplots_adjust(left=0, right=1, bottom=0, top=1)
+        plt.savefig('/Users/liyunyang/Documents/Work/ADS/wctemp.png', transparent=True)
+        os.system('imgcat ~/Documents/Work/ADS/wctemp.png')
+        if os.path.exists('/Users/liyunyang/Documents/Work/ADS/wctemp.png') is True:
+            os.system('rm /Users/liyunyang/Documents/Work/ADS/wctemp.png')
+
     if len(author_list) == 1 and fauthor == '':
         print("\033[0;33;48m H-index = %s \033[0m" % get_hindex())
         print("\033[0;33;48m Total Cit = %s \033[0m" % tot)
@@ -340,101 +359,112 @@ def scrap_a(fauthor, author_list, year, exact='NO', direct=False):
                     continue
         return 0
 
-    for idx, _ in enumerate(items):
-        p = re.compile('(\d*?)</td><td.*?"baseline">(\d*?)\.000.*?"baseline">(\d\d)/(\d{4})(.*?)width="25%">(.*?)<.*?colspan=3>(.*?)<', re.S)
-        elements = re.findall(p, _)
-        if not elements:
-            continue
-        num, cit, mm, yyyy, files, authors, title = elements[0]
-        conum = 0
-        try:
-            pp = re.compile('<span style="color: red">and (\d*?) coauthors', re.S)
-            conum = int(re.findall(pp, _)[0])
-
-        except:
-            pass
-        num = int(num)
-        authors = authors.replace('&#160;', ' ')
-        if idx > 0:
-            pass
-        print("\033[0;33;48m  %s \033[0m" % num, end='')
-        print("\033[0;31;48m  %s \033[0m" % cit, end='')
-        print("%s-%s" % (yyyy, mm))
-        author_split = authors.split('; ')
-
-        exist_print = 0
-        for idx, aut in enumerate(author_split):
-            toprint = h.unescape(aut)
-            if idx == 0:
-                print(" ", end='')
-            if check_exist(aut):
-                print("\033[1;35;48m%s\033[0m" % toprint, end='; ' if idx < len(author_split)-1 else '')
-                if idx < len(author_split)-1:
-                    exist_print += 1
-            else:
-                print("\033[0;34;48m%s\033[0m" % toprint, end='; ' if idx < len(author_split)-1 else '')
-            if exist_print > len(input_author):
-                exist_print = len(input_author)
-            if aut == '':
-                if exist_print == len(input_author):
-                    print("etc.(%d)" % conum, end='')
-                else:
-                    print("\033[1;35;48metc.\033[0m(\033[1;35;48m%d\033[0m/%d)" % (len(input_author)-exist_print, conum), end='')
-
-        print("\033[0;34;48m \033[0m")
-        print("\033[0;32;48m %s \033[0m" % h.unescape(title))
-
-        try:
-            pf = re.compile('href="([^"]*?type=ARTICLE)"', re.S)
-            ele = re.findall(pf, files)
-            F = ele[0]
-            F = F.replace('&#160;', ' ')
-            F = F.replace('#38', 'amp')
-            F = F.replace('%26', '&')
-            pj = re.compile('\d\d\d\d(.*?)(?:\.|\d)', re.S)
-            j = re.findall(pj, F)[0]
-            if j == 'Natur': j='Nature'
-            if j == 'Sci': j='Science'
-            print(' ', end='')
-            print(h.unescape(j), end=': ')
-            print("\033[1;30;48m%s\033[0m" % F)
-
-        except:
+    def scroll():
+        for idx, _ in enumerate(items):
+            p = re.compile('(\d*?)</td><td.*?"baseline">(\d*?)\.000.*?"baseline">(\d\d)/(\d{4})(.*?)width="25%">(.*?)<.*?colspan=3>(.*?)<', re.S)
+            elements = re.findall(p, _)
+            if not elements:
+                continue
+            num, cit, mm, yyyy, files, authors, title = elements[0]
+            conum = 0
             try:
-                pf = re.compile('href="([^"]*?type=EJOURNAL)"', re.S)
+                pp = re.compile('<span style="color: red">and (\d*?) coauthors', re.S)
+                conum = int(re.findall(pp, _)[0])
+
+            except:
+                pass
+            num = int(num)
+            authors = authors.replace('&#160;', ' ')
+            if idx > 0:
+                pass
+            print("\033[0;33;48m  %s \033[0m" % num, end='')
+            print("\033[0;31;48m  %s \033[0m" % cit, end='')
+            print("%s-%s" % (yyyy, mm))
+            author_split = authors.split('; ')
+
+            exist_print = 0
+            for idx, aut in enumerate(author_split):
+                toprint = h.unescape(aut)
+                if idx == 0:
+                    print(" ", end='')
+                if check_exist(aut):
+                    print("\033[1;35;48m%s\033[0m" % toprint, end='; ' if idx < len(author_split)-1 else '')
+                    if idx < len(author_split)-1:
+                        exist_print += 1
+                else:
+                    print("\033[0;34;48m%s\033[0m" % toprint, end='; ' if idx < len(author_split)-1 else '')
+                if exist_print > len(input_author):
+                    exist_print = len(input_author)
+                if aut == '':
+                    if exist_print == len(input_author):
+                        print("etc.(%d)" % conum, end='')
+                    else:
+                        print("\033[1;35;48metc.\033[0m(\033[1;35;48m%d\033[0m/%d)" % (len(input_author)-exist_print, conum), end='')
+
+            print("\033[0;34;48m \033[0m")
+            print("\033[0;32;48m %s \033[0m" % h.unescape(title))
+
+            try:
+                pf = re.compile('href="([^"]*?type=ARTICLE)"', re.S)
                 ele = re.findall(pf, files)
-                E = ele[0]
-                E = E.replace('&#160;', ' ')
-                E = E.replace('#38', 'amp')
-                E = E.replace('%26', '&')
+                F = ele[0]
+                F = F.replace('&#160;', ' ')
+                F = F.replace('#38', 'amp')
+                F = F.replace('%26', '&')
                 pj = re.compile('\d\d\d\d(.*?)(?:\.|\d)', re.S)
-                j = re.findall(pj, E)[0]
+                j = re.findall(pj, F)[0]
                 if j == 'Natur': j='Nature'
                 if j == 'Sci': j='Science'
                 print(' ', end='')
                 print(h.unescape(j), end=': ')
-                print("\033[1;30;48m%s\033[0m" % E)
+                print("\033[1;30;48m%s\033[0m" % F)
 
             except:
                 try:
-                    pf = re.compile('arXiv(\d\d\d\d)\.*(\d*).*?type=PREPRINT', re.S)
+                    pf = re.compile('href="([^"]*?type=EJOURNAL)"', re.S)
                     ele = re.findall(pf, files)
-                    a, b = ele[0]
-                    X = "https://arxiv.org/pdf/%s.%s.pdf" % (a, b)
-                    print("\033[0;31;48m X: \033[0m\033[1;30;48m%s\033[0m" % X)
-                except:
-                    pass
+                    E = ele[0]
+                    E = E.replace('&#160;', ' ')
+                    E = E.replace('#38', 'amp')
+                    E = E.replace('%26', '&')
+                    pj = re.compile('\d\d\d\d(.*?)(?:\.|\d)', re.S)
+                    j = re.findall(pj, E)[0]
+                    if j == 'Natur': j='Nature'
+                    if j == 'Sci': j='Science'
+                    print(' ', end='')
+                    print(h.unescape(j), end=': ')
+                    print("\033[1;30;48m%s\033[0m" % E)
 
-        if num % 5 == 0 and num != 0 and num < len(items):
-            response = inner_loop(True)
-            if response == 0:
-                continue
-            if response == 1:
-                break
-        if num == len(items):
-            while True:
-                if inner_loop(False) == 1:
+                except:
+                    try:
+                        pf = re.compile('arXiv(\d\d\d\d)\.*(\d*).*?type=PREPRINT', re.S)
+                        ele = re.findall(pf, files)
+                        a, b = ele[0]
+                        X = "https://arxiv.org/pdf/%s.%s.pdf" % (a, b)
+                        print("\033[0;31;48m X: \033[0m\033[1;30;48m%s\033[0m" % X)
+                    except:
+                        pass
+
+            if num % 5 == 0 and num != 0 and num < len(items):
+                response = inner_loop(True)
+                if response == 0:
+                    continue
+                elif response == 1:
                     break
+                elif response == 2:
+                    scroll()
+                    break
+            if num == len(items):
+                while True:
+                    response = inner_loop(False)
+                    if response == 1:
+                        break
+                    elif response == 2:
+                        scroll()
+                        break
+
+    scroll()
+
     print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m"% url)
     return 1
 
