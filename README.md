@@ -51,3 +51,7 @@ type the `num` to get the bibTeX ciation, which is copied to the clipboard, by d
 ## Statistics
 Command `stat` plots the statistics of the author. With the blue bars showing the number of publicaions per year (green the Nature/Science/ARA&A paper and yellow the Physical Review papers) and the orange curve showing the average citations per paper per year.
 ![img](https://github.com/LiYunyang/ADS-command-line/blob/master/example/statistics.png)
+
+## WordCloud
+Command `wc` analysis the word frequency of the titles of the search results (only in the author mode and python package [wordcloud](http://amueller.github.io/word_cloud/index.html) is required). Here is a beautiiful example of Kip Thorne:
+![img](https://github.com/LiYunyang/ADS-command-line/blob/master/example/wc.png)
