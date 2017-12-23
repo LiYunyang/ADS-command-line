@@ -841,7 +841,7 @@ def help():
 
 if __name__ == '__main__':
     h = HTMLParser()
-    os.system('imgcat ~/Documents/Work/ADS/ads_logo_left.png')
+    os.system('imgcat ~/Documents/Work/ADS/logo/ads_logo_left.png')
     orderlist = list()
     if len(sys.argv) == 1:
         standby(raw_input("\033[0;32;48m >>> \033[0m"))
