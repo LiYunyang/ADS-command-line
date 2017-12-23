@@ -1,5 +1,5 @@
 # ADS-command-line
-An interactive command line tool desigened for [Astronomical Data System](http://www.adsabs.harvard.edu) for macOS.
+An interactive command line tool desigened for [Astrophysics Data System](http://www.adsabs.harvard.edu) for macOS.
 ![img](http://adsabs.github.io/img/bbb_assets/ads_logo_full_light_background.svg)
 ## Installation
 ```
