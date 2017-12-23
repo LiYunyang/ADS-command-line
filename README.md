@@ -23,17 +23,17 @@ Python2 (and packages including re, urlib2, multiprocessing and pyperclip), [iTe
 ## Search modes
 The software allows three modes of searching.
 1. Citation based (default)
-![img](https://github.com/LiYunyang/ADS-command-line/blob/master/cmod.png)
+![img](https://github.com/LiYunyang/ADS-command-line/blob/master/example/cmod.png)
    type the citation, e.g., Li, et al., (2017); Li & Bregman 2017, etc.
    arXiv ID based search is also supported in this mode.
 2. Author-year based
-    ![img](https://github.com/LiYunyang/ADS-command-line/blob/master/amod.png)
+    ![img](https://github.com/LiYunyang/ADS-command-line/blob/master/example/amod.png)
    type `a(uthor)` to enter this search mode. 
    Use the coventional `^` before the first author, the form of the author goes as Last; Last, First; or Last, F. The search is case insensitive.
    
    The year is **required**. Can be a single year as 2017 or two years concatenated by '-' for a search within the range.
 3. Journal based
-![img](https://github.com/LiYunyang/ADS-command-line/blob/master/jmode.png)
+![img](https://github.com/LiYunyang/ADS-command-line/blob/master/example/jmode.png)
    type `j(ournal)` to enter this search mode.
    Type the abbreviations of the journal, year, volume and pages as indiated. Either of the term can be omitted.
 
@@ -50,4 +50,4 @@ type the `num` to get the bibTeX ciation, which is copied to the clipboard, by d
 
 ## Statistics
 Command `stat` plots the statistics of the author. With the blue bars showing the number of publicaions per year (green the Nature/Science/ARA&A paper and yellow the Physical Review papers) and the orange curve showing the average citations per paper per year.
-![img](https://github.com/LiYunyang/ADS-command-line/blob/master/statistics.png)
+![img](https://github.com/LiYunyang/ADS-command-line/blob/master/example/statistics.png)
