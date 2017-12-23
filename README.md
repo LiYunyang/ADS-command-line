@@ -53,5 +53,5 @@ Command `stat` plots the statistics of the author. With the blue bars showing th
 ![img](https://github.com/LiYunyang/ADS-command-line/blob/master/example/statistics.png)
 
 ## WordCloud
-Command `wc` analysis the word frequency of the titles of the search results (only in the author mode and python package [wordcloud](http://amueller.github.io/word_cloud/index.html) is required). Here is a beautiiful example of Kip Thorne:
+Command `wc` analysizes the word frequency of the titles of the search results (only in the author mode and python package [wordcloud](http://amueller.github.io/word_cloud/index.html) is required). Here is a beautiiful example of Kip Thorne:
 ![img](https://github.com/LiYunyang/ADS-command-line/blob/master/example/wc.png)
