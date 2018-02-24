@@ -70,35 +70,45 @@ class ARecord:
                     pass
         if self.journal == 'Natur': self.journal = 'Nature'
         if self.journal == 'Sci': self.journal = 'Science'
+        if self.check_exist(self.author_split[0]):
+            self.is_first = True
+        else:
+            self.is_first = False
+
+    def check_exist(self, aut):
+        for inp_aut in self.input_author:
+            inp_aut_c = inp_aut.title()
+            inp_aut_c = unicodedata.normalize('NFKD', HTMLParser().unescape(unicode(inp_aut_c, 'utf-8'))).encode(
+                'ASCII', 'ignore')
+            aut = unicodedata.normalize('NFKD', HTMLParser().unescape(unicode(aut, 'utf-8'))).encode('ASCII', 'ignore')
+            if aut[:len(inp_aut)] == inp_aut_c or aut[:len(inp_aut)] == inp_aut:
+                return 1
+            else:
+                try:
+                    idx = aut.find(',')
+                    lim = min(idx + 3, min(len(aut), len(inp_aut_c)))
+                    if aut[:lim] == inp_aut_c[:lim]:
+                        return 1
+                except:
+                    continue
+        return 0
 
     def display(self, seq_index):
-        def check_exist(aut):
-            for inp_aut in self.input_author:
-                inp_aut_c = inp_aut.title()
-                inp_aut_c = unicodedata.normalize('NFKD', HTMLParser().unescape(unicode(inp_aut_c, 'utf-8'))).encode('ASCII', 'ignore')
-                aut = unicodedata.normalize('NFKD', HTMLParser().unescape(unicode(aut, 'utf-8'))).encode('ASCII', 'ignore')
-                if aut[:len(inp_aut)] == inp_aut_c or aut[:len(inp_aut)] == inp_aut:
-                    return 1
-                else:
-                    try:
-                        idx = aut.find(',')
-                        lim = min(idx + 3, min(len(aut), len(inp_aut_c)))
-                        if aut[:lim] == inp_aut_c[:lim]:
-                            return 1
-                    except:
-                        continue
-            return 0
 
-        print("\033[0;33;48m  %s \033[0m" % (seq_index + 1), end='')
-        print("\033[0;31;48m  %s \033[0m" % self.cit, end='')
-        print("%s-%s" % (self.yyyy, self.mm))
+        print("\033[0;33;48m %3d\033[0m" % int(seq_index + 1), end='')
+        print("\033[0;31;48m %5d\033[0m" % int(self.cit), end=' ')
+        print("%s-%02d" % (self.yyyy, int(self.mm)), end=' | ')
+        if self.journal is not None:
+            print('{:<5s}'.format(self.journal))
+        else:
+            print()
 
         exist_print = 0
         for idx, aut in enumerate(self.author_split):
             toprint = HTMLParser().unescape(aut)
             if idx == 0:
                 print(" ", end='')
-            if check_exist(aut):
+            if self.check_exist(aut):
                 print("\033[1;35;48m%s\033[0m"%toprint, end='; ' if idx < len(self.author_split) - 1 else '')
                 if idx < len(self.author_split) - 1:
                     exist_print += 1
@@ -117,11 +127,9 @@ class ARecord:
         print("\033[0;32;48m %s \033[0m" % HTMLParser().unescape(self.title))
         if self.journal is not None:
             if self.journal == 'arXiv':
-                print("\033[0;31;48m X: \033[0m\033[1;30;48m%s\033[0m" % self.journal_url)
+                print("\033[0;30;48m X: \033[0m\033[1;30;48m%s\033[0m" % self.journal_url)
             else:
-                print(' ', end='')
-                print(HTMLParser().unescape(self.journal), end=': ')
-                print("\033[1;30;48m%s\033[0m" % self.journal_url)
+                print("\033[0;30;48m %s: \033[0m\033[1;30;48m%s\033[0m" % (HTMLParser().unescape(self.journal), self.journal_url))
 
 
 class ASearchResult:
@@ -143,9 +151,14 @@ class ASearchResult:
         self.cite_list = list()
         self.cite_seq_idx = list()
         self.year_seq_idx = list()
-        self.nsph_list = list()
-        self.ns_list = list()
-        self.retrieve()
+        self.time_seq_idx = list()
+        self.phys_list = list()
+        self.nsaa_list = list()
+        self.astr_list = list()
+        self.arxv_list = list()
+        self.othr_list = list()
+        self.f_au_list = list()
+        self.retrieve_status = self.retrieve()
 
     def get_author_request(self, first_author, author_list):
         if first_author is None:
@@ -198,22 +211,22 @@ class ASearchResult:
         if len(self.all_author) > 1:
             print(*self.all_author[:-1], sep='; ', end=' and ')
             print(*self.all_author[-1:], sep='')
-            print(' loading...')
+            print(' loading...', end='')
         else:
             print(self.all_author[0])
-            print(' loading...')
+            print(' loading...', end='')
         p = Pool(processes=2)
         results = p.map(get_content, (self.url, self.url_bib))
         p.close()
         p.join()
         content, content_bib = results
+        print('', end='\r')
         try:
             pattern1 = re.compile('</h3>(.*?)<h4>', re.S)
             match = re.search(pattern1, content)
             content_range = match.group(0)
             pattern_bib = re.compile('(@[\w]*?{.*?}\n})', re.S)
             self.items_bib = re.findall(pattern_bib, content_bib)
-
         except:
             print('\033[0;31;48m Retrived no result \033[0m')
             return 1
@@ -225,7 +238,8 @@ class ASearchResult:
         self.items = re.findall(pattern2, content_range)
         tok = time.time()
         self.reduce()
-        print('%d entries retrieved in \033[0;31;48m%1.2f\033[0m sec' % (len(self.all_record), tok - tik))
+        print(' %d entries retrieved in \033[0;31;48m%1.2f\033[0m sec' % (len(self.all_record), tok - tik))
+        return 0
 
     def reduce(self):
         for idx, _ in enumerate(self.items):
@@ -248,21 +262,29 @@ class ASearchResult:
 
             self.title_list.append(title)
             self.cite_seq_idx.append(idx)
-
+            self.time_seq_idx.append(int(yyyy) + (float(mm)-1)/12)
             new_record = ARecord(self.all_author, num, cit, mm, yyyy, files, authors.replace('&#160;', ' '), title, conum, self.items_bib[idx])
 
             self.all_record.append(new_record)
             if new_record.journal is not None:
+                if new_record.is_first:
+                    self.f_au_list.append(new_record.yyyy)
                 if new_record.journal in ['Nature', 'Science', 'ARA&A']:
-                    self.nsph_list.append(new_record.yyyy)
-                    self.ns_list.append(new_record.yyyy)
-                if new_record.journal[0:4] == 'PhRv':
-                    self.nsph_list.append(new_record.yyyy)
+                    self.nsaa_list.append(new_record.yyyy)
+                elif new_record.journal[0:4] == 'PhRv':
+                    self.phys_list.append(new_record.yyyy)
+                elif new_record.journal in ['ApJ', 'A&A', 'MNRAS', 'ApJS']:
+                    self.astr_list.append(new_record.yyyy)
+                elif new_record.journal == 'arXiv':
+                    self.arxv_list.append(new_record.yyyy)
+                else:
+                    self.othr_list.append(new_record.yyyy)
                 self.year_list.append(int(yyyy))
                 self.cite_list.append(int(cit))
                 self.mm_list.append(int(mm))
-        self.year_seq_idx = np.argsort(np.array(self.year_list)*100 + np.array(self.mm_list))
 
+        self.year_seq_idx = np.argsort(np.array(self.year_list)*100 + np.array(self.mm_list))
+        self.time_seq_idx = np.argsort(self.time_seq_idx)
         if len(self.year_list) > 0:
             self.titletext = ' '.join(self.title_list)
             self.year_list = np.array(self.year_list)
@@ -293,6 +315,7 @@ class ASearchResult:
         num_plot = host_subplot(111)
         cit_plot = num_plot.twinx()
         avg_cit = np.array([self.cit_sq[idx]/self.num_sq[idx] if self.num_sq[idx] > 0 else 0 for idx in np.arange(len(self.num_sq))])
+
         try:
             x_ = np.arange(self.minyear, self.maxyear + 0.05, 0.05)
             y_ = interpolate.interp1d(x=self.year_sq, y=avg_cit, kind=2)(x_)
@@ -304,10 +327,36 @@ class ASearchResult:
         _ = avg_cit[idx]
         cit_plot.scatter(self.year_sq[idx], _, s=100, color='orange')
         cit_plot.text(x=self.year_sq[idx], y=_*1.05, s='%d' % _, color='white', va='bottom', fontsize=20, ha='center')
-        ab = num_plot.hist(self.year_list, bins=self.maxyear-self.minyear+1, range=(self.minyear-(1./2), self.maxyear+1./2),
-                           color=(45./255, 120./255, 225./255))
-        num_plot.hist(self.nsph_list, bins=self.maxyear - self.minyear + 1, range=(self.minyear - (1./2), self.maxyear + 1./2), color='yellow')
-        num_plot.hist(self.ns_list, bins=self.maxyear - self.minyear + 1, range=(self.minyear - (1./2), self.maxyear + 1./2), color='green')
+
+        ab = np.histogram(self.year_list, bins=self.maxyear - self.minyear + 1, range=(self.minyear - (1./2), self.maxyear+1./2))
+        if self.astr_list:
+            num_plot.hist(list(self.nsaa_list + self.phys_list + self.arxv_list + self.othr_list + self.astr_list),
+                          bins=(self.maxyear - self.minyear + 1), range=(self.minyear - (1./2), self.maxyear + 1./2),
+                          color=(45./255, 120./255, 225./255), label='ApJ, ApJS, MNRAS, A&A ({:d})'.format(len(self.astr_list)))
+        if self.arxv_list:
+            num_plot.hist(list(self.nsaa_list + self.phys_list + self.othr_list + self.arxv_list),
+                          bins=(self.maxyear - self.minyear + 1), range=(self.minyear - (1./2), self.maxyear + 1./2),
+                          color='red', label='arXiv ({:d})'.format(len(self.arxv_list)))
+        if self.othr_list:
+            num_plot.hist(list(self.nsaa_list + self.phys_list + self.othr_list),
+                          bins=(self.maxyear - self.minyear + 1), range=(self.minyear - (1./2), self.maxyear + 1./2),
+                          color='white', label='other ({:d})'.format(len(self.othr_list)))
+        if self.phys_list:
+            num_plot.hist(list(self.nsaa_list + self.phys_list),
+                          bins=(self.maxyear - self.minyear + 1), range=(self.minyear - (1./2), self.maxyear + 1./2),
+                          color='yellow', label='PhRv ({:d})'.format(len(self.phys_list)))
+        if self.nsaa_list:
+            num_plot.hist(list(self.nsaa_list),
+                          bins=(self.maxyear - self.minyear + 1), range=(self.minyear - (1./2), self.maxyear + 1./2),
+                          color='green', label='Nature, Science, ARA&A ({:d})'.format(len(self.nsaa_list)))
+        if self.f_au_list:
+            num_plot.hist(list(self.f_au_list),
+                          bins=(self.maxyear - self.minyear + 1), range=(self.minyear - (1./2), self.maxyear + 1./2),
+                          color='black', histtype='step', linewidth=4, linestyle='dashed',
+                          label='First-author ({:d})'.format(len(self.f_au_list)))
+
+
+
         a = ab[0]
         b = ab[1]
         idx = np.argmax(a)
@@ -321,9 +370,12 @@ class ASearchResult:
         if max(avg_cit) > 800:
             cit_plot.set_yticks([100, 200, 500])
             cit_plot.set_yticklabels([100, 200, 500], fontdict={'color': 'orange', 'size': 20})
-        else:
+        elif max(avg_cit) > 100:
             cit_plot.set_yticks([10, 50, 100, 200])
             cit_plot.set_yticklabels([10, 50, 100, 200], fontdict={'color': 'orange', 'size': 20})
+        else:
+            cit_plot.set_yticks([5, 10, 20, 50])
+            cit_plot.set_yticklabels([5, 10, 20, 50], fontdict={'color': 'orange', 'size': 20})
 
         num_plot.set_yticks([5, 10])
         num_plot.set_yticklabels([5, 10], fontdict={'color': (45./255, 120./255, 225./255), 'size': 20})
@@ -345,6 +397,11 @@ class ASearchResult:
         cit_plot.spines['bottom'].set_color('none')
         cit_plot.spines['left'].set_color('none')
         cit_plot.spines['right'].set_color('none')
+
+        legend = plt.legend(loc=2, fontsize=15)
+        frame = legend.get_frame()
+        plt.setp(legend.get_texts(), color='white')
+        frame.set_facecolor('none')
         plt.subplots_adjust(bottom=0.05, left=0.03, right=0.97)
         plt.savefig('/Users/liyunyang/Documents/Work/ADS/temp.eps', transparent=True)
         os.system('imgcat ~/Documents/Work/ADS/temp.eps')
@@ -458,8 +515,12 @@ class JRecord:
         self.bib = items_bib[0]
 
     def display(self, seq_index):
-        print("\033[0;33;48m  %s \033[0m" % (seq_index + 1), end='')
-        print("%s-%s" % (self.yyyy, self.mm))
+        print("\033[0;33;48m %3d \033[0m" % int(seq_index + 1), end='')
+        print("%s-%02d" % (self.yyyy, int(self.mm)), end=' | ')
+        if self.journal is not None:
+            print('{:<5s}'.format(self.journal))
+        else:
+            print()
         for idx, aut in enumerate(self.author_split):
             toprint = HTMLParser().unescape(aut)
             if idx == 0:
@@ -471,11 +532,9 @@ class JRecord:
         print("\033[0;32;48m %s \033[0m" % HTMLParser().unescape(self.title))
         if self.journal is not None:
             if self.journal == 'arXiv':
-                print("\033[0;31;48m X: \033[0m\033[1;30;48m%s\033[0m" % self.journal_url)
+                print("\033[0;30;48m X: \033[0m\033[1;30;48m%s\033[0m" % self.journal_url)
             else:
-                print(' ', end='')
-                print(HTMLParser().unescape(self.journal), end=': ')
-                print("\033[1;30;48m%s\033[0m" % self.journal_url)
+                print("\033[0;30;48m %s: \033[0m\033[1;30;48m%s\033[0m" % (HTMLParser().unescape(self.journal), self.journal_url))
 
 
 class JSearchResult:
@@ -491,13 +550,14 @@ class JSearchResult:
         self.year_list = list()
         self.mm_list = list()
         self.year_seq_idx = list()
-        self.retrieve()
+        self.time_seq_idx = list()
+        self.retrieve_status = self.retrieve()
 
     def retrieve(self):
         tik = time.time()
-        print(' loading...')
+        print(' loading...', end='')
         content = get_content(self.url)
-
+        print('', end='\r')
         try:
             pattern1 = re.compile('</h3>(.*?)<h4>', re.S)
             match = re.search(pattern1, content)
@@ -510,7 +570,8 @@ class JSearchResult:
         self.items = re.findall(pattern2, content_range)
         tok = time.time()
         self.reduce()
-        print('%d entries retrieved in \033[0;31;48m%1.2f\033[0m sec' % (len(self.all_record), tok - tik))
+        print(' %d entries retrieved in \033[0;31;48m%1.2f\033[0m sec' % (len(self.all_record), tok - tik))
+        return 0
 
     def reduce(self):
         for idx, _ in enumerate(self.items):
@@ -528,7 +589,7 @@ class JSearchResult:
             title = HTMLParser().unescape(title)
 
             self.title_list.append(title)
-
+            self.time_seq_idx.append(int(yyyy) + (float(mm) - 1)/12)
             new_record = JRecord(num, mm, yyyy, files, authors.replace('&#160;', ' '), title)
 
             self.all_record.append(new_record)
@@ -536,7 +597,7 @@ class JSearchResult:
                 self.year_list.append(int(yyyy))
                 self.mm_list.append(int(mm))
         self.year_seq_idx = np.argsort(np.array(self.year_list)*100 + np.array(self.mm_list))
-
+        self.time_seq_idx = np.argsort(self.time_seq_idx)
         if len(self.year_list) > 0:
             self.titletext = ' '.join(self.title_list)
             self.year_list = np.array(self.year_list)

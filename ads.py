@@ -13,14 +13,19 @@ def format_author(author):
     :param author: a sting of name 
     :return: name in the format: "last, first"
     """
+    author = author.replace(',', ', ')
+    author = author.replace('.', '. ')
+    author = re.sub('\s+,', ',', author)
     author = re.sub('\s+', ' ', author)
-    p1 = re.compile('\S.*\S', re.S)
+    p1 = re.compile('\S.*\S|\S', re.S)
     fullname = re.search(p1, author).group(0)
-    splitted = fullname.split(',')
+    splitted = fullname.split(', ')
+
     if len(splitted) == 2:
         # input=last, first or last,
         lastname = re.search(p1, splitted[0]).group(0)
         firstname = re.search(p1, splitted[1]).group(0) if splitted[1] != '' else ''
+
     else:
         # input=first last or last
         space_splitted = splitted[0].split(' ')
@@ -106,9 +111,14 @@ def get_sr_object(order):
                         authors[idx] = format_author(_)
                     year = ['1900', '%d' % int(time.localtime().tm_year)]
                     sr = dc.ASearchResult(first_author=None, author_list=authors, year=year, exact=exact)
+                    if sr.retrieve_status == 0:
+                        pass
+                    else:
+                        sr = None
 
 
     except:
+        print("\033[A                                                                               \033[A")
         print('\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1])
         sr = None
     return sr
@@ -116,9 +126,9 @@ def get_sr_object(order):
 
 def outer_loop():
     while True:
-        order = raw_input("\033[0;32;48m >>> \033[0m")
+        order = raw_input("\033[0;34;48m >>> \033[0m")
         orderlist.append(order)
-        if order != '':
+        if order != '' and order.isspace() is False:
             break
     if (order == 'exit'[:len(order)] or order == 'quit'[:len(order)]) and len(order) > 0:
         sys.exit(0)
@@ -134,40 +144,50 @@ def outer_loop():
 
 
 def inner_loop(sr):
+    scroll_num = 5
+
+    def do_scroll():
+        for i in range(scroll_num):
+            try:
+                scroller.next()
+            except:
+                break
+
     if sr.__class__ is dc.ASearchResult:
+
         def scroll(scroll_order):
             if scroll_order == 'cite':
                 sr.idx_seq = sr.cite_seq_idx
-            if scroll_order == 'rcite':
+            elif scroll_order == 'rcite':
                 sr.idx_seq = sr.cite_seq_idx[::-1]
             elif scroll_order == 'year':
-                sr.idx_seq = sr.year_seq_idx
+                sr.idx_seq = sr.time_seq_idx
             elif scroll_order == 'ryear':
-                sr.idx_seq = sr.year_seq_idx[::-1]
+                sr.idx_seq = sr.time_seq_idx[::-1]
 
-            print("\033[0;33;48m num\033[0m \033[0;31;48mcit\033[0m date")
+            print("\033[0;33;48m num\033[0m \033[0;31;48m cite\033[0m    date")
             for i, idx in enumerate(sr.idx_seq):
                 sr.all_record[idx].display(i)
                 num = i + 1
-                if num % 5 == 0 and num != 0 and num < len(sr.all_record):
+                if num % 1 == 0 and num != 0 and num < len(sr.all_record):
                     yield 0
+
         if len(sr.all_author) == 1 and sr.first_author is None:
             print("\033[0;33;48m H-index = %s \033[0m" % sr.get_hindex())
             print("\033[0;33;48m Total Cit = %s \033[0m" % sr.tot_cit)
         else:
             print("\033[0;33;48m Total Cit = %s \033[0m" % sr.tot_cit)
+
         scroller = scroll('cite')
         if len(sr.all_author) == 1 and sr.first_author is None and sr.year == ['1900', '%d' % int(time.localtime().tm_year)]:
             pass
         else:
-            try:
-                scroller.next()
-            except:
-                pass
+            do_scroll()
+
         while True:
-            order = raw_input(' continue\033[0;32;48m >>> \033[0m')
+            order = raw_input(' >>> ')
             orderlist.append(order)
-            if len(order) > 0 and order[0] == 'c':
+            if len(order) > 0 and order[0] == 'C':
                 try:
                     idx = int(order[1:])
                     pyperclip.copy(sr.all_record[sr.idx_seq[idx - 1]].bib)
@@ -175,19 +195,25 @@ def inner_loop(sr):
                 except:
                     pass
                 continue
+            elif len(order) > 0 and (order[0] == 's' or order[0] == 'S'):
+                try:
+                    scroll_num = int(order[1:])
+                    do_scroll()
+                    continue
+                except:
+                    pass
             try:
                 idx = int(order)
                 j_url = sr.all_record[sr.idx_seq[idx-1]].journal_url
-                print("\033[1;30;48m%s: %s\033[0m" % (sr.all_record[sr.idx_seq[idx - 1]].journal, sr.all_record[sr.idx_seq[idx - 1]].title))
+                print("\033[1;30;48m Article in Safari: %s\033[0m" % (sr.all_record[sr.idx_seq[idx - 1]].title))
                 os.system("open '%s'" % j_url)
             except ValueError:
-                if order == '':
-                    try:
-                        scroller.next()
-                    except:
-                        pass
+                if order == '' or order.isspace() is True:
+                    print("\033[A                                                                               \033[A")
+                    do_scroll()
                 elif order == 'url'[:len(order)]:
-                    print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m" % sr.url)
+                    print("\033[1;30;48m URL in Safari: %s\033[0m" % sr.url)
+                    os.system("open '%s'" % sr.url)
                 elif order == 'stat'[:len(order)]:
                     sr.plot_statistic()
                 elif order == 'wc'[:len(order)]:
@@ -202,61 +228,59 @@ def inner_loop(sr):
                         if order == _[:len(order)]:
                             if_in = True
                             scroller = scroll(_)
-                            try:
-                                scroller.next()
-                            except:
-                                pass
+                            do_scroll()
                             break
                     if if_in is False:
-                        print('\033[0 ;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1])
+                        print("\033[A                                                                               \033[A")
+                        print('\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1])
                         continue
-        print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m" % sr.url)
+        print("\033[1;30;48m URL: %s\033[0m" % sr.url)
 
     elif sr.__class__ is dc.JSearchResult:
         print(len(sr.all_record))
 
         def scroll(scroll_order):
             if scroll_order == 'year':
-                sr.idx_seq = sr.year_seq_idx
+                sr.idx_seq = sr.time_seq_idx
             elif scroll_order == 'ryear':
-                sr.idx_seq = sr.year_seq_idx[::-1]
+                sr.idx_seq = sr.time_seq_idx[::-1]
             print("\033[0;33;48m num\033[0m  date")
             for i, idx in enumerate(sr.idx_seq):
                 sr.all_record[idx].display(i)
                 num = i + 1
-                if num % 5 == 0 and num != 0 and num < len(sr.all_record):
+                if num % 1 == 0 and num != 0 and num < len(sr.all_record):
                     yield 0
 
         scroller = scroll('ryear')
-        try:
-            scroller.next()
-        except:
-            pass
+        do_scroll()
         while True:
-            order = raw_input(' continue\033[0;32;48m >>> \033[0m')
+            order = raw_input(' >>> ')
             orderlist.append(order)
-            if len(order) > 0 and order[0] == 'c':
-
+            if len(order) > 0 and order[0] == 'C':
                 idx = int(order[1:])
                 sr.all_record[sr.idx_seq[idx - 1]].get_citation()
                 pyperclip.copy(sr.all_record[sr.idx_seq[idx - 1]].bib)
                 print("\033[0;33;48m citation of %d is copied to clipboard \033[0m" % idx)
-
-
+                continue
+            elif len(order) > 0 and (order[0] == 's' or order[0] == 'S'):
+                try:
+                    scroll_num = int(order[1:])
+                except:
+                    pass
+                do_scroll()
                 continue
             try:
                 idx = int(order)
                 j_url = sr.all_record[sr.idx_seq[idx - 1]].journal_url
-                print("\033[1;30;48m%s: %s\033[0m" % (sr.all_record[sr.idx_seq[idx - 1]].journal, sr.all_record[sr.idx_seq[idx - 1]].title))
+                print("\033[1;30;48m Article in Safari: %s\033[0m" % (sr.all_record[sr.idx_seq[idx - 1]].title))
                 os.system("open '%s'" % j_url)
             except ValueError:
-                if order == '':
-                    try:
-                        scroller.next()
-                    except:
-                        pass
+                if order == '' or order.isspace() is True:
+                    print("\033[A                                                                               \033[A")
+                    do_scroll()
                 elif order == 'url'[:len(order)]:
-                    print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m" % sr.url)
+                    print("\033[1;30;48m URL in Safafi: %s\033[0m" % sr.url)
+                    os.system("open '%s'"%sr.url)
                 elif order == 'wc'[:len(order)]:
                     sr.plot_wordcloud()
                 elif order == 'exit'[:len(order)] or order == '^[':
@@ -269,15 +293,13 @@ def inner_loop(sr):
                         if order == _[:len(order)]:
                             if_in = True
                             scroller = scroll(_)
-                            try:
-                                scroller.next()
-                            except:
-                                pass
+                            do_scroll()
                             break
                     if if_in is False:
-                        print('\033[0 ;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1])
+                        print("\033[A                                                                               \033[A")
+                        print('\033[0;31;48m Unrecgonized command: %s \033[0m' % orderlist[-1])
                         continue
-        print("\033[0;32;48m URL: \033[0m\033[1;30;48m%s\033[0m" % sr.url)
+        print("\033[1;30;48m URL: %s\033[0m" % sr.url)
 
 
 def get_ainfo():
@@ -288,12 +310,12 @@ def get_ainfo():
         exact = 'NO'
         year = ['1900', '%d' % int(time.localtime().tm_year)]
         while True:
-            get = raw_input(' author \033[0;32;48m >>> \033[0m ')
+            get = raw_input(' author \033[0;34;48m >>> \033[0m ')
             orderlist.append(get)
             if get.find('!') >= 0:
                 get = get.replace('!', '')
                 exact = 'YES'
-            if get == '' or get.isspace():
+            if get == '' or get.isspace() is True:
                 break
             if get == 'exit'[:len(get)]:
                 return None
@@ -311,12 +333,17 @@ def get_ainfo():
                         fauthor = format_author(get[1:])
                     else:
                         a_list.append(format_author(get))
+
         if len(year) == 1:
             year *= 2
         if fauthor is None and len(a_list) == 0:
             return None
+
         sr = dc.ASearchResult(first_author=fauthor, author_list=a_list, year=year, exact=exact)
-        return sr
+        if sr.retrieve_status == 0:
+            return sr
+        else:
+            return None
     except:
         return None
 
@@ -324,7 +351,7 @@ def get_ainfo():
 def get_jinfo():
     print("\033[0;34;48m Search by journal:\033[0m")
     print(" hints: \033[1;35;48m ApJ\033[0m; \033[1;35;48m ApJS\033[0m; \033[1;35;48m MNRAS\033[0m; \033[1;35;48m A&A\033[0m; \033[1;35;48m ARA&A\033[0m; \033[1;35;48m Natur\033[0m;\033[1;35;48m NatAs\033[0m; \033[1;35;48m NatPh\033[0m; \033[1;35;48m Sci\033[0m; \033[1;35;48m PhRv(ABCDEFLMP)\033[0m; \033[1;35;48m A&ARv\033[0m; \033[1;35;48m RAA\033[0m")
-    journal = raw_input(" journal \033[0;32;48m >>> \033[0m ")
+    journal = raw_input(" journal \033[0;34;48m >>> \033[0m ")
     journal = journal.replace('&', '%26')
     orderlist.append(journal)
 
@@ -333,28 +360,31 @@ def get_jinfo():
     if journal == 'quit'[:len(journal)] and len(journal) > 0:
         os._exit(0)
 
-    year = raw_input(" year \033[0;32;48m >>> \033[0m")
+    year = raw_input(" year \033[0;34;48m >>> \033[0m")
     orderlist.append(year)
     if year == 'exit'[:len(year)] and len(year) > 0:
         return None
     if year == 'quit'[:len(year)] and len(year) > 0:
         os._exit(0)
 
-    volume = raw_input(' volume \033[0;32;48m >>> \033[0m ')
+    volume = raw_input(' volume \033[0;34;48m >>> \033[0m ')
     orderlist.append(volume)
     if volume == 'exit'[:len(volume)] and len(volume) > 0:
         return None
     if volume == 'quit'[:len(volume)] and len(volume) > 0:
         os._exit(0)
 
-    page = raw_input(' page \033[0;32;48m >>> \033[0m ')
+    page = raw_input(' page \033[0;34;48m >>> \033[0m ')
     orderlist.append(page)
     if page == 'exit'[:len(page)] and len(page) > 0:
         return None
     if page == 'quit'[:len(page)] and len(page) > 0:
         os._exit(0)
     sr = dc.JSearchResult(journal=journal, year=year, volume=volume, page=page)
-    return sr
+    if sr.retrieve_status == 0:
+        return sr
+    else:
+        return None
 
 
 def help():
