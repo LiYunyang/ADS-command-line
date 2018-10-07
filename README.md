@@ -31,7 +31,7 @@ The software allows three modes of searching.
    type `a(uthor)` to enter this search mode. 
    Use the coventional `^` before the first author, the form of the author goes as Last; Last, First; or Last, F. The search is case insensitive.
    
-   The year is **required**. Can be a single year as 2017 or two years concatenated by '-' for a search within the range.
+   The year is **required**, which can be a single year like `2017` or two years concatenated by '-' for a search within the range.
 3. Journal based
 ![img](https://github.com/LiYunyang/ADS-command-line/blob/master/example/jmode.png)
    type `j(ournal)` to enter this search mode.
@@ -46,12 +46,12 @@ The link to the article, if available, is given in the gray url with the name of
 Click the url lind to acess to the PDF version of the article.
 
 ## Ciation
-type the `num` to get the bibTeX ciation, which is copied to the clipboard, by default.
+type `num` to get the bibTeX ciation, which is by default copied to the clipboard.
 
 ## Statistics
 Command `stat` plots the statistics of the author. With the blue bars showing the number of publicaions per year (green the Nature/Science/ARA&A paper and yellow the Physical Review papers) and the orange curve showing the average citations per paper per year. Here is an expample of P. Abbott
 ![img](https://github.com/LiYunyang/ADS-command-line/blob/master/example/statistics.png)
 
 ## WordCloud
-Command `wc` analysizes the word frequency of the titles of the search results (only in the author mode and python package [wordcloud](http://amueller.github.io/word_cloud/index.html) is required). Here is a beautiiful example of Kip Thorne:
+Command `wc` analysizes the word frequency of the titles of the search results (only in the author mode and python package [wordcloud](http://amueller.github.io/word_cloud/index.html) is required). Here is an example for Dr. Kip Thorne:
 ![img](https://github.com/LiYunyang/ADS-command-line/blob/master/example/wc.png)
