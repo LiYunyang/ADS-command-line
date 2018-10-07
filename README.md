@@ -13,7 +13,7 @@ ads
 `
 or use
 `
-ads Name-of-the-author(s) (year)
+ads NAMEOFTHEAUTHOR(S) (YYYY)
 `
 for a quick search.
 
